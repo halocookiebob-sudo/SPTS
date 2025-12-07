@@ -17,10 +17,10 @@ local AREA_REQUIREMENTS = {
     ["Body Toughness"] = {
         FireBathTouchPart = "10k", Water = "100", IcePart = "100K", LavaPart = "10M", 
         TornadoTouchPart = "1M", GreenFirePart = "1B", AcidPart = "100B", LavaPart2 = "10T", 
-        AFK_BT_1 = "1Qa", AFK_BT_2 = "50Qa", AFK_BT_3 = "5Qi", AFK_BT_4 = "450Qi", 
-        AFK_BT_5 = "40Sx", AFK_BT_6 = "3Sp", AFK_BT_7 = "250Sp", AFK_BT_8 = "20Oc", 
-        AFK_BT_9 = "2No", AFK_BT_10 = "200No", AFK_BT_11 = "15Dc", AFK_BT_12 = "1Ud", 
-        AFK_BT_13 = "250Ud", AFK_BT_14 = "10Dd", AFK_BT_15 = "1Td",
+        AFK_BT_1 = "1Qa", AFK_BT_2 = "50Qa/655T", AFK_BT_3 = "5Qi/66.6Qa", AFK_BT_4 = "450Qi/5.1Qi", 
+        AFK_BT_5 = "40Sx/460Qi", AFK_BT_6 = "3Sp/40.05Sx", AFK_BT_7 = "250Sp/3.55Sp", AFK_BT_8 = "20Oc/314Sp", 
+        AFK_BT_9 = "2No/27.78Oc", AFK_BT_10 = "200No/2.473No", AFK_BT_11 = "15Dc/217.5No", AFK_BT_12 = "1Ud/19.5Dc", 
+        AFK_BT_13 = "250Ud/1.7Ud", AFK_BT_14 = "10Dd/155Ud", AFK_BT_15 = "1Td/13.56Dd",
     },
     ["Fist Strength"] = {
         TrainingArea_2 = "0", AFK_FS_1 = "1Qa", TrainingArea_3 = "1M", StarFSTraining1 = "1B", 
