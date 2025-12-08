@@ -726,40 +726,34 @@ autoFarmBtn.MouseButton1Click:Connect(function()
         TweenService:Create(autoFarmBtn, TweenInfo.new(0.2), {BackgroundColor3 = THEMES[currentTheme].accent}):Play()
     end
 end)
+local lastPosition = nil
+local DISTANCE_THRESHOLD = 20
 
 local function updateCharacter()
     local char = player.Character or player.CharacterAdded:Wait()
     task.spawn(function()
         while char.Parent do
             task.wait(0.2)
-           if autoFarm and selectedArea then
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if hrp then
+            if autoFarm and selectedArea and CATEGORIES["Body Toughness"] then
+                if lastPosition then
+                    local distance = (char.PrimaryPart.Position - lastPosition).Magnitude
+                    if distance < DISTANCE_THRESHOLD then
+                        continue
+                    end
+                end
 
-        -- Determinar posição alvo
-        local targetPos
-
-        if selectedArea:FindFirstChild("CFrame") then
-            targetPos = selectedArea.CFrame.Value.Position
-        elseif selectedArea:IsA("BasePart") then
-            targetPos = selectedArea.Position
-        end
-
-        if targetPos then
-            local distance = (hrp.Position - targetPos).Magnitude
-
-            -- AQUI VOCÊ ESCOLHE A DISTÂNCIA
-            if distance > 20 then
-                -- Teleporta corretamente
                 if selectedArea:FindFirstChild("CFrame") then
                     char:PivotTo(selectedArea.CFrame.Value)
                 elseif selectedArea:IsA("BasePart") then
                     char:PivotTo(selectedArea.CFrame)
                 end
+
+                lastPosition = char.PrimaryPart.Position
             end
         end
-    end
+    end)
 end
+
 
 
 player.CharacterAdded:Connect(updateCharacter)
