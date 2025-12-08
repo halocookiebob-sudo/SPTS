@@ -732,23 +732,30 @@ local function updateCharacter()
     task.spawn(function()
         while char.Parent do
             task.wait(0.2)
-           if autoFarm and selectedArea then
+  if autoFarm and selectedArea then
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if hrp then
-        local targetCF
+
+        -- Determinar posição alvo
+        local targetPos
 
         if selectedArea:FindFirstChild("CFrame") then
-            targetCF = selectedArea.CFrame.Value
+            targetPos = selectedArea.CFrame.Value.Position
         elseif selectedArea:IsA("BasePart") then
-            targetCF = selectedArea.CFrame
+            targetPos = selectedArea.Position
         end
 
-        if targetCF then
-            local distance = (hrp.Position - targetCF.Position).Magnitude
+        if targetPos then
+            local distance = (hrp.Position - targetPos).Magnitude
 
-            -- Só teleporta se estiver mais de 5 studs longe
-            if distance > 5 then
-                char:PivotTo(targetCF)
+            -- AQUI VOCÊ ESCOLHE A DISTÂNCIA
+            if distance > 20 then
+                -- Teleporta corretamente
+                if selectedArea:FindFirstChild("CFrame") then
+                    char:PivotTo(selectedArea.CFrame.Value)
+                elseif selectedArea:IsA("BasePart") then
+                    char:PivotTo(selectedArea.CFrame)
+                end
             end
         end
     end
