@@ -732,7 +732,25 @@ local function updateCharacter()
     task.spawn(function()
         while char.Parent do
             task.wait(0.2)
-            if autoFarm and selectedArea then
+           if autoFarm and selectedArea then
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+
+        -- Determinar posição alvo
+        local targetPos
+
+        if selectedArea:FindFirstChild("CFrame") then
+            targetPos = selectedArea.CFrame.Value.Position
+        elseif selectedArea:IsA("BasePart") then
+            targetPos = selectedArea.Position
+        end
+
+        if targetPos then
+            local distance = (hrp.Position - targetPos).Magnitude
+
+            -- AQUI VOCÊ ESCOLHE A DISTÂNCIA
+            if distance > 20 then
+                -- Teleporta corretamente
                 if selectedArea:FindFirstChild("CFrame") then
                     char:PivotTo(selectedArea.CFrame.Value)
                 elseif selectedArea:IsA("BasePart") then
@@ -740,8 +758,9 @@ local function updateCharacter()
                 end
             end
         end
-    end)
+    end
 end
+
 
 player.CharacterAdded:Connect(updateCharacter)
 updateCharacter()
