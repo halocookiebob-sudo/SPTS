@@ -1,1 +1,324 @@
+-- LocalScript em StarterPlayerScripts
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Checa se a GUI já existe
+if playerGui:FindFirstChild("TrainingCalculatorGUI") then
+    playerGui.TrainingCalculatorGUI.Enabled = true
+    return
+end
+
+-- Função para criar UI
+local function createUI(class, parent, props)
+    local obj = Instance.new(class)
+    for k,v in pairs(props) do obj[k] = v end
+    obj.Parent = parent
+    return obj
+end
+
+-- Conversão de sufixos
+local SUFIXOS = {
+    k=1e3, M=1e6, B=1e9, T=1e12,
+    Qa=1e15, Qi=1e18, Sx=1e21, Sp=1e24,
+    Oc=1e27, No=1e30, Dc=1e33, Ud=1e36,
+    Dd=1e39, Td=1e42
+}
+
+local function toNumber(str)
+    if not str then return 0 end
+    if str == "???" then return nil end
+    local num, suf = string.match(str, "([%d%.]+)%s*([%a]+)")
+    if num then
+        return tonumber(num) * (SUFIXOS[suf] or 1)
+    else
+        return tonumber(str)
+    end
+end
+
+local function formatNumber(n)
+    local absN = math.abs(n)
+    if absN >= 1e42 then return string.format("%.2f Td", n/1e42)
+    elseif absN >= 1e39 then return string.format("%.2f Dd", n/1e39)
+    elseif absN >= 1e36 then return string.format("%.2f Ud", n/1e36)
+    elseif absN >= 1e33 then return string.format("%.2f Dc", n/1e33)
+    elseif absN >= 1e30 then return string.format("%.2f No", n/1e30)
+    elseif absN >= 1e27 then return string.format("%.2f Oc", n/1e27)
+    elseif absN >= 1e24 then return string.format("%.2f Sp", n/1e24)
+    elseif absN >= 1e21 then return string.format("%.2f Sx", n/1e21)
+    elseif absN >= 1e18 then return string.format("%.2f Qi", n/1e18)
+    elseif absN >= 1e15 then return string.format("%.2f Qa", n/1e15)
+    elseif absN >= 1e12 then return string.format("%.2f T", n/1e12)
+    elseif absN >= 1e9 then return string.format("%.2f B", n/1e9)
+    elseif absN >= 1e6 then return string.format("%.2f M", n/1e6)
+    elseif absN >= 1e3 then return string.format("%.2f k", n/1e3)
+    else return tostring(n) end
+end
+
+local function formatTime(sec)
+    local days = math.floor(sec/86400)
+    sec = sec % 86400
+    local hours = math.floor(sec/3600)
+    sec = sec % 3600
+    local minutes = math.floor(sec/60)
+    return string.format("%d dias %d horas %d minutos", days, hours, minutes)
+end
+
+-- Áreas completas com mínimo para BT
+local areas = {
+    PS = {
+        {Req="Flight Ability", Mult="10"},
+        {Req="1 Million", Mult="100"},
+        {Req="1 Billion", Mult="10000"},
+        {Req="1 Trillion", Mult="1000000"},
+        {Req="1 Qa", Mult="100M"},
+        {Req="333 Qa", Mult="2.5B"},
+        {Req="111 Qi", Mult="250B"},
+        {Req="33.3 Sx", Mult="25T"},
+        {Req="11.1 Sp", Mult="2.5Qa"},
+        {Req="3.36 Oc", Mult="250Qa"},
+        {Req="1.11 No", Mult="25Qi"},
+        {Req="444 No", Mult="2.5Sx"},
+        {Req="111 Dc", Mult="???"}, 
+        {Req="55.5 Ud", Mult="???"}, 
+        {Req="22.2 Dd", Mult="???"}
+    },
+    FS = {
+        {Req="N/A", Mult="10"},
+        {Req="Flight Ability", Mult="100"},
+        {Req="1 Billion", Mult="2000"},
+        {Req="100 Billion", Mult="40000"},
+        {Req="10 Trillion", Mult="800000"},
+        {Req="1 Qa", Mult="6000000"},
+        {Req="100 Qa", Mult="300000000"},
+        {Req="15 Qi", Mult="21000000000"},
+        {Req="2.5 Sx", Mult="2.308T"},
+        {Req="1 Sp", Mult="347.5T"},
+        {Req="500 Sp", Mult="52Qa"},
+        {Req="250 Oc", Mult="7.8Qi"},
+        {Req="150 No", Mult="???"}, 
+        {Req="55 Dc", Mult="???"}, 
+        {Req="30 Ud", Mult="???"}, 
+        {Req="11 Dd", Mult="???"}
+    },
+    JF = {
+        {Req="100 T", Mult="1.7M"},
+        {Req="5 Qa", Mult="30.5M"},
+        {Req="150 Qa", Mult="550M"},
+        {Req="5 Qi", Mult="9.92B"},
+        {Req="300 Sx", Mult="???"}
+    },
+    MS = {
+        {Req="100 T", Mult="1.3M"},
+        {Req="2.22 Qa", Mult="16.9M"},
+        {Req="56.5 Qa", Mult="219.7M"},
+        {Req="1.444 Qi", Mult="2.85B"},
+        {Req="36.7 Qi", Mult="37.2B"},
+        {Req="1 Sx", Mult="482.4B"},
+        {Req="23.8 Sx", Mult="6.274T"},
+        {Req="750 Sx", Mult="81.5T"},
+        {Req="15.5 Sp", Mult="2.12Qa"},
+        {Req="395.6 Sp", Mult="13.77Qa"},
+        {Req="10 Oc", Mult="179.2Qa"}
+    },
+    BT = {
+        {Req="100", Min="5", Mult="5"},
+        {Req="10k", Min="500", Mult="10"},
+        {Req="100k", Min="5k", Mult="20"},
+        {Req="1M", Min="50k", Mult="50"},
+        {Req="10M", Min="500k", Mult="100"},
+        {Req="1B", Min="50M", Mult="2000"},
+        {Req="100B", Min="5B", Mult="40000"},
+        {Req="10T", Min="500B", Mult="800000"},
+        {Req="1Qa", Min="7.383T", Mult="6000000"},
+        {Req="50Qa", Min="655T", Mult="180M"},
+        {Req="5Qi", Min="66.6Qa", Mult="5.5B"},
+        {Req="450Qi", Min="5.1Qi", Mult="162.5B"},
+        {Req="40Sx", Min="460Qi", Mult="5T"},
+        {Req="3Sp", Min="40.05Sx", Mult="150T"},
+        {Req="250Sp", Min="3.55Sp", Mult="4.5Qa"},
+        {Req="20Oc", Min="314Sp", Mult="131.2Qa"},
+        {Req="2No", Min="27.78Oc", Mult="3.925Qi"},
+        {Req="200No", Min="2.473No", Mult="118Qi"},
+        {Req="15Dc", Min="217.5No", Mult="3.55Sx"},
+        {Req="1Ud", Min="19.5Dc", Mult="106.2Sx"},
+        {Req="250Ud", Min="1.7Ud", Mult="3.2Sp"},
+        {Req="10Dd", Min="155Ud", Mult="95.74Sp"},
+        {Req="1Td", Min="13.56Dd", Mult="2.5Oc"}
+    }
+}
+
+-- GUI Principal
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TrainingCalculatorGUI"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+local mainFrame = createUI("Frame", screenGui, {
+    Name="MainFrame",
+    Size=UDim2.new(0,500,0,500),
+    Position=UDim2.new(0.5,-250,0.5,-250),
+    BackgroundColor3=Color3.fromRGB(45,45,45),
+    BorderSizePixel=0
+})
+
+-- Botão fechar
+local closeButton = createUI("TextButton", mainFrame, {
+    Text="X", Size=UDim2.new(0,30,0,30),
+    Position=UDim2.new(1,-40,0,10),
+    BackgroundColor3=Color3.fromRGB(180,0,0),
+    TextColor3=Color3.new(1,1,1),
+    Font=Enum.Font.SourceSansBold, TextSize=18
+})
+closeButton.MouseButton1Click:Connect(function() screenGui.Enabled=false end)
+
+-- Função para criar dropdowns com estilo
+local function createDropdown(parent, labelText, pos)
+    local label = createUI("TextLabel", parent, {
+        Text=labelText, Size=UDim2.new(0,100,0,30),
+        Position=pos, TextColor3=Color3.new(1,1,1), BackgroundTransparency=1,
+        Font=Enum.Font.SourceSansBold, TextSize=18, TextXAlignment=Enum.TextXAlignment.Left
+    })
+    local box = createUI("TextButton", parent, {
+        Text="Selecionar", Size=UDim2.new(0,150,0,30),
+        Position=UDim2.new(0,pos.X.Offset+110,0,pos.Y.Offset),
+        BackgroundColor3=Color3.fromRGB(70,70,70), TextColor3=Color3.new(1,1,1),
+        Font=Enum.Font.SourceSansBold, TextSize=18
+    })
+    local list = createUI("Frame", parent, {
+        Size=UDim2.new(0,150,0,150),
+        Position=UDim2.new(0,pos.X.Offset+110,0,pos.Y.Offset+35),
+        BackgroundColor3=Color3.fromRGB(80,80,80), Visible=false
+    })
+    createUI("UIListLayout", list, {})
+    box.MouseButton1Click:Connect(function() list.Visible = not list.Visible end)
+    return box, list
+end
+
+local categoryBox, categoryList = createDropdown(mainFrame,"Categoria",UDim2.new(0,10,0,10))
+local areaBox, areaList = createDropdown(mainFrame,"Área",UDim2.new(0,10,0,60))
+
+-- Inputs de multiplier e poder
+createUI("TextLabel", mainFrame, {Text="Seu Multiplier", Size=UDim2.new(0,120,0,30), Position=UDim2.new(0,10,0,250), TextColor3=Color3.new(1,1,1), BackgroundTransparency=1, Font=Enum.Font.SourceSansBold, TextSize=18})
+local multiplierInput = createUI("TextBox", mainFrame, {Text="", Size=UDim2.new(0,150,0,30), Position=UDim2.new(0,140,0,250), BackgroundColor3=Color3.fromRGB(255,255,255), TextColor3=Color3.new(0,0,0), ClearTextOnFocus=true, Font=Enum.Font.SourceSansBold, TextSize=18})
+
+-- Dropdown rápido de multipliers com scroll
+local multBox, _ = createDropdown(mainFrame,"Multiplier",UDim2.new(0,280,0,250))
+local MULTS = {}
+local val = 1
+while val <= 1e6 do
+    table.insert(MULTS, tostring(val))
+    val = val * 2
+end
+
+local scrollingFrame = createUI("ScrollingFrame", mainFrame, {
+    Size = UDim2.new(0,150,0,200),
+    Position = UDim2.new(0,280,0,280),
+    BackgroundColor3 = Color3.fromRGB(80,80,80),
+    BorderSizePixel = 0,
+    CanvasSize = UDim2.new(0,0,#MULTS*30),
+    ScrollBarThickness = 8,
+    Visible = false
+})
+createUI("UIListLayout", scrollingFrame, {SortOrder = Enum.SortOrder.LayoutOrder})
+
+for _, m in ipairs(MULTS) do
+    local btn = createUI("TextButton", scrollingFrame, {
+        Text=m, Size=UDim2.new(1,0,0,30),
+        BackgroundColor3=Color3.fromRGB(100,100,100),
+        TextColor3=Color3.new(1,1,1),
+        Font=Enum.Font.SourceSansBold, TextSize=18
+    })
+    btn.MouseButton1Click:Connect(function()
+        multBox.Text = m
+        scrollingFrame.Visible = false
+    end)
+end
+multBox.MouseButton1Click:Connect(function()
+    scrollingFrame.Visible = not scrollingFrame.Visible
+end)
+
+-- Toggles
+local speedToggle = createUI("TextButton", mainFrame, {Text="Speed 2x: OFF", Size=UDim2.new(0,150,0,30), Position=UDim2.new(0,10,0,370), BackgroundColor3=Color3.fromRGB(70,70,70), TextColor3=Color3.new(1,1,1), Font=Enum.Font.SourceSansBold, TextSize=18})
+local trainToggle = createUI("TextButton", mainFrame, {Text="Treino 2x: OFF", Size=UDim2.new(0,150,0,30), Position=UDim2.new(0,170,0,370), BackgroundColor3=Color3.fromRGB(70,70,70), TextColor3=Color3.new(1,1,1), Font=Enum.Font.SourceSansBold, TextSize=18})
+local speedActive, trainActive = false, false
+speedToggle.MouseButton1Click:Connect(function()
+    speedActive = not speedActive
+    speedToggle.Text = "Speed 2x: " .. (speedActive and "ON" or "OFF")
+end)
+trainToggle.MouseButton1Click:Connect(function()
+    trainActive = not trainActive
+    trainToggle.Text = "Treino 2x: " .. (trainActive and "ON" or "OFF")
+end)
+
+-- Input poder atual
+createUI("TextLabel", mainFrame, {Text="Seu Poder Atual", Size=UDim2.new(0,140,0,30), Position=UDim2.new(0,10,0,290), TextColor3=Color3.new(1,1,1), BackgroundTransparency=1, Font=Enum.Font.SourceSansBold, TextSize=18})
+local currentPowerInput = createUI("TextBox", mainFrame, {Text="0", Size=UDim2.new(0,150,0,30), Position=UDim2.new(0,160,0,290), BackgroundColor3=Color3.fromRGB(255,255,255), TextColor3=Color3.new(0,0,0), ClearTextOnFocus=true, Font=Enum.Font.SourceSansBold, TextSize=18})
+
+-- Botão calcular
+local calculateButton = createUI("TextButton", mainFrame, {Text="Calcular", Size=UDim2.new(0,100,0,30), Position=UDim2.new(0,10,0,410), BackgroundColor3=Color3.fromRGB(0,150,0), TextColor3=Color3.new(1,1,1), Font=Enum.Font.SourceSansBold, TextSize=18})
+local resultLabel = createUI("TextLabel", mainFrame, {Text="", Size=UDim2.new(0,480,0,150), Position=UDim2.new(0,10,0,450), TextColor3=Color3.new(1,1,1), TextWrapped=true, BackgroundTransparency=1, Font=Enum.Font.SourceSansBold, TextSize=18})
+
+-- Popula categorias e áreas
+for cat,_ in pairs(areas) do
+    local btn = createUI("TextButton", categoryList, {Text=cat, Size=UDim2.new(1,0,0,30), BackgroundColor3=Color3.fromRGB(90,90,90), TextColor3=Color3.new(1,1,1), Font=Enum.Font.SourceSansBold, TextSize=18})
+    btn.MouseButton1Click:Connect(function()
+        categoryBox.Text = cat
+        categoryList.Visible = false
+        for _,v in ipairs(areaList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+        for _,area in ipairs(areas[cat]) do
+            local areaBtn = createUI("TextButton", areaList, {Text=area.Req, Size=UDim2.new(1,0,0,30), BackgroundColor3=Color3.fromRGB(100,100,100), TextColor3=Color3.new(1,1,1), Font=Enum.Font.SourceSansBold, TextSize=18})
+            areaBtn.MouseButton1Click:Connect(function()
+                areaBox.Text = area.Req
+                areaBox:SetAttribute("SelectedMultiplier", area.Mult)
+                areaBox:SetAttribute("SelectedMin", area.Min)
+                areaList.Visible=false
+            end)
+        end
+    end)
+end
+
+-- Cálculo
+calculateButton.MouseButton1Click:Connect(function()
+    local selectedMultiplier = areaBox:GetAttribute("SelectedMultiplier")
+    local selectedMin = areaBox:GetAttribute("SelectedMin")
+    if not selectedMultiplier then
+        resultLabel.Text = "Selecione uma área."
+        return
+    end
+    local playerMultiplier = tonumber(multBox.Text) or tonumber(multiplierInput.Text)
+    if not playerMultiplier or playerMultiplier <= 0 then
+        resultLabel.Text = "Digite um multiplier válido."
+        return
+    end
+    local currentPower = tonumber(currentPowerInput.Text) or 0
+    local areaValue = toNumber(selectedMultiplier)
+    if not areaValue then
+        resultLabel.Text = "Multiplier da área desconhecido."
+        return
+    end
+    local cat = categoryBox.Text
+    local areaIndex = nil
+    for i, a in ipairs(areas[cat]) do
+        if a.Req == areaBox.Text then areaIndex=i break end
+    end
+    local nextReq = nil
+    if cat == "BT" and areaIndex and areas[cat][areaIndex+1] then
+        nextReq = toNumber(areas[cat][areaIndex+1].Min)
+    elseif areaIndex and areas[cat][areaIndex+1] then
+        nextReq = toNumber(areas[cat][areaIndex+1].Req)
+    end
+    local ratePerSec = areaValue * playerMultiplier
+    if trainActive then ratePerSec = ratePerSec*2 end
+    local remaining = nextReq and math.max(0,nextReq-currentPower) or 0
+    local seconds = nextReq and remaining/ratePerSec or 0
+    if speedActive then seconds = seconds/2 end
+    local production = string.format("Produção por segundo: %s\nPor minuto: %s\nPor hora: %s\nPor dia: %s",
+        formatNumber(ratePerSec),
+        formatNumber(ratePerSec*60),
+        formatNumber(ratePerSec*3600),
+        formatNumber(ratePerSec*86400)
+    )
+    local timeText = nextReq and "Tempo estimado até a próxima área: "..formatTime(seconds) or "Última área selecionada."
+    resultLabel.Text = production.."\n"..timeText
+end)
 
