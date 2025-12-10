@@ -71,7 +71,7 @@ local AREA_REQUIREMENTS = {
     },
 
     MovementSpeed = {
-        AFK_MS_1 = { req = "1Qa", multi = "x1.3M" },
+        AFK_MS_1 = { req = "100T", multi = "x1.3M" },
         AFK_MS_2 = { req = "2.22Qa", multi = "x16.9M" },
         AFK_MS_3 = { req = "60Qa", multi = "x219.7M" },
         AFK_MS_4 = { req = "1.5Qi", multi = "x2.85B" },
@@ -391,13 +391,16 @@ weightButton.MouseButton1Click:Connect(function()
     local MSLoop = {{"Add_MS_Request"}}
     local JFLoop = {{"Add_JF_Request"}}
 
+    -- Loop automático de MS e JF
     spawn(function()
-        while selectedType == "MovementSpeed" or selectedType == "JumpForce" do
+        while true do
             game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(MSLoop))
             game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(JFLoop))
             task.wait(0.1)
         end
     end)
+
+    infoLabel.Text = "Auto Weight ativo — farmando MS e JF automaticamente"
 end)
 
 ---------------------------------------------------------------------
