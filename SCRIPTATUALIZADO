@@ -1,67 +1,53 @@
--- AUTO TRAINING SYSTEM (complete)
-
--- CONFIG
 local MAX_DISTANCE = 15
 local RETURN_CHECK_DELAY = 0.5
-local BUTTON_HEIGHT = 40
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local screenGui = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
 local infoFrame = screenGui:WaitForChild("MenuFrame"):WaitForChild("InfoFrame")
 local areasParent = workspace:WaitForChild("Map"):WaitForChild("Training_Collisions")
 
----------------------------------------------------------------------
--- AREA REQUIREMENTS
----------------------------------------------------------------------
 local AREA_REQUIREMENTS = {
     BodyToughness = {
         FireBathTouchPart = { req = "500", multi = "x10" },
         Water = { req = "5", multi = "x5" },
         IcePart = { req = "5K", multi = "x20" },
         LavaPart = { req = "500K", multi = "x100" },
-
         TornadoTouchPart = { req = "50K", multi = "x50" },
         GreenFirePart = { req = "50M", multi = "x2000" },
         AcidPart = { req = "5B", multi = "x40000" },
         LavaPart2 = { req = "500B", multi = "x800000" },
-
         AFK_BT_1 = { req = "7.383T", multi = "x6M" },
         AFK_BT_2 = { req = "655T", multi = "x180M" },
         AFK_BT_3 = { req = "66.6Qa", multi = "x5.5B" },
         AFK_BT_4 = { req = "5.1Qi", multi = "x162.5B" },
-
         AFK_BT_5 = { req = "460Qi", multi = "x5T" },
         AFK_BT_6 = { req = "40.05Sx", multi = "x150T" },
         AFK_BT_7 = { req = "3.55Sp", multi = "x4.5Qa" },
         AFK_BT_8 = { req = "314Sp", multi = "x131.2Qa" },
-
         AFK_BT_9 = { req = "27.78Oc", multi = "x3.925Qi" },
         AFK_BT_10 = { req = "2.473No", multi = "x118Qi" },
         AFK_BT_11 = { req = "217.5No", multi = "x3.55Sx" },
         AFK_BT_12 = { req = "19.5Dc", multi = "x106.2Sx" },
-
         AFK_BT_13 = { req = "1.7Ud", multi = "x3.2Sp" },
         AFK_BT_14 = { req = "155Ud", multi = "x95.74Sp" },
         AFK_BT_15 = { req = "13.56Dd", multi = "x2.5Oc" },
     },
-
     FistStrength = {
         TrainingArea_2 = { req = "0", multi = "x10" },
         AFK_FS_1 = { req = "1Qa", multi = "x6M" },
-
         TrainingArea_3 = { req = "1M", multi = "x100" },
         StarFSTraining1 = { req = "1B", multi = "x2000" },
         StarFSTraining2 = { req = "100B", multi = "x40000" },
         StarFSTraining3 = { req = "10T", multi = "x800000" },
-
         AFK_FS_2 = { req = "100Qa", multi = "x300M" },
         AFK_FS_3 = { req = "15Qi", multi = "x21B" },
         AFK_FS_4 = { req = "2.5Sx", multi = "x2.308T" },
         AFK_FS_5 = { req = "1Sp", multi = "x347.5T" },
-
         AFK_FS_6 = { req = "500Sp", multi = "x52Qa" },
         AFK_FS_7 = { req = "250Oc", multi = "x7.8Qi" },
         AFK_FS_8 = { req = "150No", multi = "???" },
@@ -69,34 +55,28 @@ local AREA_REQUIREMENTS = {
         AFK_FS_10 = { req = "30Ud", multi = "???" },
         AFK_FS_11 = { req = "11Dd", multi = "???" },
     },
-
     MovementSpeed = {
         AFK_MS_1 = { req = "100T", multi = "x1.3M" },
         AFK_MS_2 = { req = "2.22Qa", multi = "x16.9M" },
         AFK_MS_3 = { req = "60Qa", multi = "x219.7M" },
         AFK_MS_4 = { req = "1.5Qi", multi = "x2.85B" },
-
         AFK_MS_5 = { req = "40Qi", multi = "x37.2B" },
         AFK_MS_6 = { req = "1Sx", multi = "x482.4B" },
         AFK_MS_7 = { req = "25Sx", multi = "x6.274T" },
         AFK_MS_8 = { req = "750Sx", multi = "x81.5T" },
-
         AFK_MS_9 = { req = "15.5Sp", multi = "x2.12Qa" },
         AFK_MS_10 = { req = "400Sp", multi = "x13.77Qa" },
         AFK_MS_11 = { req = "10Oc", multi = "x179.2Qa" },
     },
-
     PsychicPower = {
         PPTrainingPart1 = { req = "1M", multi = "x100" },
         PPTrainingPart2 = { req = "1B", multi = "x10k" },
         PPTrainingPart3 = { req = "1T", multi = "x1M" },
         PPTrainingPart4 = { req = "1Qa", multi = "x100M" },
-
         AFK_PP_1 = { req = "333Qa", multi = "x2.5B" },
         AFK_PP_2 = { req = "111Qi", multi = "x250B" },
         AFK_PP_3 = { req = "33.3Sx", multi = "x25T" },
         AFK_PP_4 = { req = "11.1Sp", multi = "x2.5Qa" },
-
         AFK_PP_5 = { req = "3.36Oc", multi = "x250Qa" },
         AFK_PP_6 = { req = "1.11No", multi = "x25Qi" },
         AFK_PP_7 = { req = "444No", multi = "x2.5Sx" },
@@ -104,13 +84,11 @@ local AREA_REQUIREMENTS = {
         AFK_PP_9 = { req = "55.5Ud", multi = "???" },
         AFK_PP_10 = { req = "22.2Dd", multi = "???" },
     },
-
     JumpForce = {
         AFK_JF_1 = { req = "100T", multi = "x1.7M" },
         AFK_JF_2 = { req = "5Qa", multi = "x30.5M" },
         AFK_JF_3 = { req = "150Qa", multi = "x550M" },
         AFK_JF_4 = { req = "5Qi", multi = "x9.92B" },
-
         AFK_JF_5 = { req = "200Qi", multi = "???" },
         AFK_JF_6 = { req = "10Sx", multi = "???" },
         AFK_JF_7 = { req = "300Sx", multi = "???" },
@@ -119,216 +97,6 @@ local AREA_REQUIREMENTS = {
     },
 }
 
----------------------------------------------------------------------
--- CONVERSOR
----------------------------------------------------------------------
-local UNIT_ORDER = {
-    {"K", 1e3},{"M", 1e6},{"B", 1e9},{"T", 1e12},{"Qa", 1e15},{"Qi", 1e18},
-    {"Sx", 1e21},{"Sp", 1e24},{"Oc", 1e27},{"No", 1e30},{"Dc", 1e33},
-    {"Ud", 1e36},{"Dd", 1e39}
-}
-
-local function convertToNumber(str)
-    if not str then return 0 end
-    local s = tostring(str):gsub("%s+", "")
-    local num, unit = s:match("([%d%.]+)(%a*)$")
-    local n = tonumber(num) or 0
-    if unit == "" then return n end
-    for _, u in ipairs(UNIT_ORDER) do
-        if u[1] == unit then
-            return n * u[2]
-        end
-    end
-    return n
-end
-
----------------------------------------------------------------------
--- PEGAR STATUS
----------------------------------------------------------------------
-local STATUS_PATHS = {
-    FistStrength  = infoFrame:WaitForChild("FSTxt"),
-    BodyToughness = infoFrame:WaitForChild("BTTxt"),
-    PsychicPower  = infoFrame:WaitForChild("PPTxt"),
-    JumpForce     = infoFrame:WaitForChild("JFTxt"),
-    MovementSpeed = infoFrame:WaitForChild("MSTxt"),
-}
-
-local function getCurrentStatus(trainingType)
-    local obj = STATUS_PATHS[trainingType]
-    if not obj then return 0 end
-    return convertToNumber(obj.Text)
-end
-
----------------------------------------------------------------------
--- ENCONTRAR MELHOR ÁREA
----------------------------------------------------------------------
-local function findBestAreaName(trainingType, power)
-    local t = AREA_REQUIREMENTS[trainingType]
-    if not t then return nil end
-    local best, bestReq = nil, -1
-    for areaName, data in pairs(t) do
-        local req = convertToNumber(data.req)
-        if power >= req and req > bestReq then
-            best = areaName
-            bestReq = req
-        end
-    end
-    return best, bestReq
-end
-
-local function getAreaObject(trainingType, areaName)
-    local folder = areasParent:FindFirstChild(trainingType)
-    if not folder then return nil end
-    return folder:FindFirstChild(areaName)
-end
-
----------------------------------------------------------------------
--- TELEPORTE
----------------------------------------------------------------------
-local function teleportToAreaObject(area)
-    if not area then return false end
-    local char = player.Character
-    if not char then return false end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return false end
-    local cf
-    if area:IsA("BasePart") then
-        cf = area.CFrame
-    else
-        local p = area.PrimaryPart or area:FindFirstChildWhichIsA("BasePart")
-        if p then cf = p.CFrame end
-    end
-    if cf then
-        hrp.CFrame = cf + Vector3.new(0,5,0)
-        return true, cf + Vector3.new(0,5,0)
-    end
-    return false
-end
-
----------------------------------------------------------------------
--- UI
----------------------------------------------------------------------
-local existing = screenGui:FindFirstChild("AutoTrainPanel")
-if existing then existing:Destroy() end
-
-local panel = Instance.new("Frame", screenGui)
-panel.Name = "AutoTrainPanel"
-panel.Size = UDim2.new(0,260,0,340)
-panel.Position = UDim2.new(0,14,0.5,-170)
-panel.BackgroundColor3 = Color3.fromRGB(30,30,30)
-panel.BackgroundTransparency = 0.15
-
-local title = Instance.new("TextLabel", panel)
-title.Size = UDim2.new(1,-12,0,30)
-title.Position = UDim2.new(0,6,0,6)
-title.BackgroundTransparency = 1
-title.Text = "AutoTrain"
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 18
-title.TextColor3 = Color3.fromRGB(230,230,230)
-
-local infoLabel = Instance.new("TextLabel", panel)
-infoLabel.Size = UDim2.new(1,-12,0,44)
-infoLabel.Position = UDim2.new(0,6,0,40)
-infoLabel.BackgroundColor3 = Color3.fromRGB(20,20,20)
-infoLabel.BackgroundTransparency = 0.4
-infoLabel.TextColor3 = Color3.fromRGB(220,220,220)
-infoLabel.Font = Enum.Font.SourceSans
-infoLabel.TextSize = 14
-infoLabel.TextWrapped = true
-infoLabel.Text = "Nenhum poder ativo"
-
-local buttonsFolder = Instance.new("Frame", panel)
-buttonsFolder.Size = UDim2.new(1,-12,0,250)
-buttonsFolder.Position = UDim2.new(0,6,0,90)
-buttonsFolder.BackgroundTransparency = 1
-
-local layout = Instance.new("UIListLayout", buttonsFolder)
-layout.Padding = UDim.new(0,6)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-
-local DISPLAY = {
-    FistStrength = "Fist Strength",
-    BodyToughness = "Body Toughness",
-    PsychicPower = "Psychic Power",
-    JumpForce = "Jump Force",
-    MovementSpeed = "Movement Speed"
-}
-
-local BTN_DEFAULT = Color3.fromRGB(60,60,60)
-local BTN_ACTIVE = Color3.fromRGB(0,200,60)
-
-local buttons = {}
-local selectedType = nil
-local selectedButton = nil
-local activeAreaObj = nil
-local currentAreaCF = nil
-
----------------------------------------------------------------------
--- BOTÕES
----------------------------------------------------------------------
-local categories = {"FistStrength","BodyToughness","PsychicPower","JumpForce","MovementSpeed"}
-
-for _, cat in ipairs(categories) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,0,0,BUTTON_HEIGHT)
-    btn.BackgroundColor3 = BTN_DEFAULT
-    btn.TextColor3 = Color3.fromRGB(230,230,230)
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 16
-    btn.Text = DISPLAY[cat]
-    btn.Parent = buttonsFolder
-
-    buttons[cat] = btn
-
-    btn.MouseButton1Click:Connect(function()
-        if selectedType == cat then
-            selectedType = nil
-            selectedButton.BackgroundColor3 = BTN_DEFAULT
-            selectedButton = nil
-            activeAreaObj = nil
-            currentAreaCF = nil
-            infoLabel.Text = "Nenhum poder ativo"
-            return
-        end
-
-        if selectedButton then selectedButton.BackgroundColor3 = BTN_DEFAULT end
-        selectedType = cat
-        selectedButton = btn
-        btn.BackgroundColor3 = BTN_ACTIVE
-
-        local power = getCurrentStatus(cat)
-        local areaName = findBestAreaName(cat, power)
-
-        if not areaName then
-            infoLabel.Text = DISPLAY[cat].." — sem área disponível"
-            currentAreaCF = nil
-            return
-        end
-
-        local areaObj = getAreaObject(cat, areaName)
-        activeAreaObj = areaObj
-
-        if not areaObj then
-            infoLabel.Text = "Área '"..areaName.."' não encontrada!"
-            currentAreaCF = nil
-            return
-        end
-
-        local ok, cf = teleportToAreaObject(areaObj)
-        if ok then
-            currentAreaCF = cf
-            infoLabel.Text = DISPLAY[cat].." — Área: "..areaName.." (req "..AREA_REQUIREMENTS[cat][areaName].req..")"
-        else
-            infoLabel.Text = "Erro ao teleportar!"
-        end
-    end)
-end
-
----------------------------------------------------------------------
--- PESOS
----------------------------------------------------------------------
 local WEIGHTS_LIST = {
     {name="100 LB", MS=100, JF=5000},
     {name="1 TON", MS=5000, JF=200000},
@@ -351,6 +119,78 @@ local WEIGHTS_LIST = {
     {name="10 Oc TON", MS=4.744e39, JF=6.8e39},
 }
 
+local UNIT_ORDER = {
+    {"K", 1e3},{"M", 1e6},{"B", 1e9},{"T", 1e12},{"Qa", 1e15},{"Qi", 1e18},
+    {"Sx", 1e21},{"Sp", 1e24},{"Oc", 1e27},{"No", 1e30},{"Dc", 1e33},
+    {"Ud", 1e36},{"Dd", 1e39}
+}
+
+local function convertToNumber(str)
+    if not str then return 0 end
+    local s = tostring(str):gsub("%s+", "")
+    local num, unit = s:match("([%d%.]+)(%a*)$")
+    local n = tonumber(num) or 0
+    if unit == "" then return n end
+    for _, u in ipairs(UNIT_ORDER) do
+        if u[1] == unit then return n * u[2] end
+    end
+    return n
+end
+
+local STATUS_PATHS = {
+    FistStrength  = infoFrame:WaitForChild("FSTxt"),
+    BodyToughness = infoFrame:WaitForChild("BTTxt"),
+    PsychicPower  = infoFrame:WaitForChild("PPTxt"),
+    JumpForce     = infoFrame:WaitForChild("JFTxt"),
+    MovementSpeed = infoFrame:WaitForChild("MSTxt"),
+}
+
+local function getCurrentStatus(trainingType)
+    local obj = STATUS_PATHS[trainingType]
+    if not obj then return 0 end
+    return convertToNumber(obj.Text)
+end
+
+local function findBestAreaName(trainingType, power)
+    local t = AREA_REQUIREMENTS[trainingType]
+    if not t then return nil end
+    local best, bestReq = nil, -1
+    for areaName, data in pairs(t) do
+        local req = convertToNumber(data.req)
+        if power >= req and req > bestReq then
+            best = areaName
+            bestReq = req
+        end
+    end
+    return best, bestReq
+end
+
+local function getAreaObject(trainingType, areaName)
+    local folder = areasParent:FindFirstChild(trainingType)
+    if not folder then return nil end
+    return folder:FindFirstChild(areaName)
+end
+
+local function teleportToAreaObject(area)
+    if not area then return false end
+    local char = player.Character
+    if not char then return false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    local cf
+    if area:IsA("BasePart") then
+        cf = area.CFrame
+    else
+        local p = area.PrimaryPart or area:FindFirstChildWhichIsA("BasePart")
+        if p then cf = p.CFrame end
+    end
+    if cf then
+        hrp.CFrame = cf + Vector3.new(0,5,0)
+        return true, cf + Vector3.new(0,5,0)
+    end
+    return false
+end
+
 local function equipBestWeight()
     local currentMS = getCurrentStatus("MovementSpeed")
     local currentJF = getCurrentStatus("JumpForce")
@@ -367,46 +207,691 @@ local function equipBestWeight()
     end
 
     if weightToEquip then
-        local args = {
-            {
-                "EquipWeight_Request",
-                weightIndex
-            }
-        }
+        local args = {{  "EquipWeight_Request", weightIndex }}
         game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
-        print("Equipado peso:", weightToEquip.name)
     end
 end
 
-local weightButton = Instance.new("TextButton", buttonsFolder)
-weightButton.Size = UDim2.new(1,0,0,BUTTON_HEIGHT)
-weightButton.BackgroundColor3 = BTN_DEFAULT
-weightButton.TextColor3 = Color3.fromRGB(230,230,230)
-weightButton.Font = Enum.Font.SourceSansBold
-weightButton.TextSize = 16
-weightButton.Text = "Auto Weight"
-weightButton.MouseButton1Click:Connect(function()
-    equipBestWeight()
+local existing = screenGui:FindFirstChild("eSPTSUI")
+if existing then existing:Destroy() end
 
-    local MSLoop = {{"Add_MS_Request"}}
-    local JFLoop = {{"Add_JF_Request"}}
+local mainGui = Instance.new("ScreenGui")
+mainGui.Name = "eSPTSUI"
+mainGui.ResetOnSpawn = false
+mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+mainGui.Parent = screenGui
 
-    -- Loop automático de MS e JF
-    spawn(function()
-        while true do
-            game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(MSLoop))
-            game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(JFLoop))
-            task.wait(0.1)
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "ToggleButton"
+toggleButton.Size = UDim2.new(0, 80, 0, 80)
+toggleButton.Position = UDim2.new(0, 20, 0.5, -40)
+toggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+toggleButton.BorderSizePixel = 0
+toggleButton.Text = ""
+toggleButton.AutoButtonColor = false
+toggleButton.Parent = mainGui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 12)
+toggleCorner.Parent = toggleButton
+
+local toggleLabel = Instance.new("TextLabel")
+toggleLabel.Size = UDim2.new(1, 0, 1, 0)
+toggleLabel.BackgroundTransparency = 1
+toggleLabel.Text = "eSPTS"
+toggleLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+toggleLabel.Font = Enum.Font.GothamBold
+toggleLabel.TextSize = 20
+toggleLabel.Parent = toggleButton
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 600, 0, 480)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Parent = mainGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 16)
+mainCorner.Parent = mainFrame
+
+local topBar = Instance.new("Frame")
+topBar.Name = "TopBar"
+topBar.Size = UDim2.new(1, 0, 0, 50)
+topBar.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 16)
+topCorner.Parent = topBar
+
+local topFill = Instance.new("Frame")
+topFill.Size = UDim2.new(1, 0, 0, 16)
+topFill.Position = UDim2.new(0, 0, 1, -16)
+topFill.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+topFill.BorderSizePixel = 0
+topFill.Parent = topBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(0, 200, 1, 0)
+titleLabel.Position = UDim2.new(0, 20, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "eSPTS"
+titleLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 20
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = topBar
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 40, 0, 40)
+closeButton.Position = UDim2.new(1, -45, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+closeButton.BorderSizePixel = 0
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 18
+closeButton.AutoButtonColor = false
+closeButton.Parent = topBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 8)
+closeCorner.Parent = closeButton
+
+local tabContainer = Instance.new("Frame")
+tabContainer.Name = "TabContainer"
+tabContainer.Size = UDim2.new(1, -40, 0, 40)
+tabContainer.Position = UDim2.new(0, 20, 0, 60)
+tabContainer.BackgroundTransparency = 1
+tabContainer.Parent = mainFrame
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0, 10)
+tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+tabLayout.Parent = tabContainer
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Name = "ContentFrame"
+contentFrame.Size = UDim2.new(1, -40, 1, -140)
+contentFrame.Position = UDim2.new(0, 20, 0, 120)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+local tabs = {"Auto Farm", "Auto Weights", "Position Man", "Configs"}
+local tabButtons = {}
+local tabContents = {}
+local savedPoint = nil
+
+for i, tabName in ipairs(tabs) do
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Size = UDim2.new(0, 130, 1, 0)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    tabBtn.BorderSizePixel = 0
+    tabBtn.Text = tabName
+    tabBtn.TextColor3 = Color3.fromRGB(150, 150, 160)
+    tabBtn.Font = Enum.Font.GothamSemibold
+    tabBtn.TextSize = 14
+    tabBtn.AutoButtonColor = false
+    tabBtn.Parent = tabContainer
+    
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 8)
+    tabCorner.Parent = tabBtn
+    
+    tabButtons[tabName] = tabBtn
+    
+    local content = Instance.new("ScrollingFrame")
+    content.Size = UDim2.new(1, 0, 1, 0)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
+    content.ScrollBarThickness = 6
+    content.ScrollBarImageColor3 = Color3.fromRGB(100, 200, 255)
+    content.Visible = (i == 1)
+    content.CanvasSize = UDim2.new(0, 0, 0, 0)
+    content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    content.Parent = contentFrame
+    
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.Padding = UDim.new(0, 12)
+    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentLayout.Parent = content
+    
+    tabContents[tabName] = content
+end
+
+local function switchTab(tabName)
+    for name, btn in pairs(tabButtons) do
+        if name == tabName then
+            btn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+            btn.TextColor3 = Color3.fromRGB(150, 150, 160)
+        end
+    end
+    
+    for name, content in pairs(tabContents) do
+        content.Visible = (name == tabName)
+    end
+end
+
+for name, btn in pairs(tabButtons) do
+    btn.MouseButton1Click:Connect(function()
+        switchTab(name)
+    end)
+    
+    btn.MouseEnter:Connect(function()
+        if btn.BackgroundColor3 ~= Color3.fromRGB(100, 200, 255) then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
         end
     end)
+    
+    btn.MouseLeave:Connect(function()
+        if btn.BackgroundColor3 ~= Color3.fromRGB(100, 200, 255) then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+        end
+    end)
+end
 
-    infoLabel.Text = "Auto Weight ativo — farmando MS e JF automaticamente"
+switchTab("Auto Farm")
+
+local farmContent = tabContents["Auto Farm"]
+local selectedType = nil
+local selectedButton = nil
+local activeAreaObj = nil
+local currentAreaCF = nil
+
+local infoBox = Instance.new("Frame")
+infoBox.Size = UDim2.new(1, 0, 0, 70)
+infoBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+infoBox.BorderSizePixel = 0
+infoBox.Parent = farmContent
+
+local infoCorner = Instance.new("UICorner")
+infoCorner.CornerRadius = UDim.new(0, 10)
+infoCorner.Parent = infoBox
+
+local infoText = Instance.new("TextLabel")
+infoText.Size = UDim2.new(1, -20, 1, -20)
+infoText.Position = UDim2.new(0, 10, 0, 10)
+infoText.BackgroundTransparency = 1
+infoText.Text = "No active training"
+infoText.TextColor3 = Color3.fromRGB(200, 200, 210)
+infoText.Font = Enum.Font.Gotham
+infoText.TextSize = 14
+infoText.TextWrapped = true
+infoText.TextXAlignment = Enum.TextXAlignment.Left
+infoText.TextYAlignment = Enum.TextYAlignment.Top
+infoText.Parent = infoBox
+
+local DISPLAY = {
+    FistStrength = "Fist Strength",
+    BodyToughness = "Body Toughness",
+    PsychicPower = "Psychic Power",
+    JumpForce = "Jump Force",
+    MovementSpeed = "Movement Speed"
+}
+
+local categories = {"FistStrength","BodyToughness","PsychicPower","JumpForce","MovementSpeed"}
+local farmButtons = {}
+
+for _, cat in ipairs(categories) do
+    local btnFrame = Instance.new("Frame")
+    btnFrame.Size = UDim2.new(1, 0, 0, 55)
+    btnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    btnFrame.BorderSizePixel = 0
+    btnFrame.Parent = farmContent
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    btnCorner.Parent = btnFrame
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Text = DISPLAY[cat]
+    btn.TextColor3 = Color3.fromRGB(200, 200, 210)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 16
+    btn.AutoButtonColor = false
+    btn.Parent = btnFrame
+    
+    farmButtons[cat] = {frame = btnFrame, button = btn}
+    
+    btn.MouseButton1Click:Connect(function()
+        if selectedType == cat then
+            selectedType = nil
+            selectedButton = nil
+            activeAreaObj = nil
+            currentAreaCF = nil
+            btnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+            btn.TextColor3 = Color3.fromRGB(200, 200, 210)
+            infoText.Text = "No active training"
+            return
+        end
+
+        if selectedButton then
+            farmButtons[selectedType].frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+            farmButtons[selectedType].button.TextColor3 = Color3.fromRGB(200, 200, 210)
+        end
+        
+        selectedType = cat
+        selectedButton = btn
+        btnFrame.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+        local power = getCurrentStatus(cat)
+        local areaName = findBestAreaName(cat, power)
+
+        if not areaName then
+            infoText.Text = DISPLAY[cat].." — No available area"
+            currentAreaCF = nil
+            return
+        end
+
+        local areaObj = getAreaObject(cat, areaName)
+        activeAreaObj = areaObj
+
+        if not areaObj then
+            infoText.Text = "Area '"..areaName.."' not found!"
+            currentAreaCF = nil
+            return
+        end
+
+        local ok, cf = teleportToAreaObject(areaObj)
+        if ok then
+            currentAreaCF = cf
+            infoText.Text = DISPLAY[cat].." — Area: "..areaName.." (req "..AREA_REQUIREMENTS[cat][areaName].req..")"
+        else
+            infoText.Text = "Teleport failed!"
+        end
+    end)
+    
+    btn.MouseEnter:Connect(function()
+        if selectedType ~= cat then
+            TweenService:Create(btnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+        end
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        if selectedType ~= cat then
+            TweenService:Create(btnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+        end
+    end)
+end
+
+local weightsContent = tabContents["Auto Weights"]
+
+local weightInfoBox = Instance.new("Frame")
+weightInfoBox.Size = UDim2.new(1, 0, 0, 70)
+weightInfoBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+weightInfoBox.BorderSizePixel = 0
+weightInfoBox.Parent = weightsContent
+
+local weightInfoCorner = Instance.new("UICorner")
+weightInfoCorner.CornerRadius = UDim.new(0, 10)
+weightInfoCorner.Parent = weightInfoBox
+
+local weightInfoText = Instance.new("TextLabel")
+weightInfoText.Size = UDim2.new(1, -20, 1, -20)
+weightInfoText.Position = UDim2.new(0, 10, 0, 10)
+weightInfoText.BackgroundTransparency = 1
+weightInfoText.Text = "Auto weight system inactive"
+weightInfoText.TextColor3 = Color3.fromRGB(200, 200, 210)
+weightInfoText.Font = Enum.Font.Gotham
+weightInfoText.TextSize = 14
+weightInfoText.TextWrapped = true
+weightInfoText.TextXAlignment = Enum.TextXAlignment.Left
+weightInfoText.TextYAlignment = Enum.TextYAlignment.Top
+weightInfoText.Parent = weightInfoBox
+
+local autoWeightActive = false
+
+local weightBtnFrame = Instance.new("Frame")
+weightBtnFrame.Size = UDim2.new(1, 0, 0, 55)
+weightBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+weightBtnFrame.BorderSizePixel = 0
+weightBtnFrame.Parent = weightsContent
+
+local weightBtnCorner = Instance.new("UICorner")
+weightBtnCorner.CornerRadius = UDim.new(0, 10)
+weightBtnCorner.Parent = weightBtnFrame
+
+local weightBtn = Instance.new("TextButton")
+weightBtn.Size = UDim2.new(1, 0, 1, 0)
+weightBtn.BackgroundTransparency = 1
+weightBtn.Text = "Start Auto Weight"
+weightBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+weightBtn.Font = Enum.Font.GothamSemibold
+weightBtn.TextSize = 16
+weightBtn.AutoButtonColor = false
+weightBtn.Parent = weightBtnFrame
+
+weightBtn.MouseButton1Click:Connect(function()
+    autoWeightActive = not autoWeightActive
+    
+    if autoWeightActive then
+        weightBtnFrame.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        weightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        weightBtn.Text = "Stop Auto Weight"
+        equipBestWeight()
+        
+        spawn(function()
+            while autoWeightActive do
+                local MSLoop = {{"Add_MS_Request"}}
+                local JFLoop = {{"Add_JF_Request"}}
+                game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(MSLoop))
+                game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(JFLoop))
+                task.wait(0.1)
+            end
+        end)
+        
+        weightInfoText.Text = "Auto Weight active — farming MS and JF automatically"
+    else
+        weightBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+        weightBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+        weightBtn.Text = "Start Auto Weight"
+        weightInfoText.Text = "Auto weight system inactive"
+    end
 end)
 
----------------------------------------------------------------------
--- LOOP PRINCIPAL DE TELEPORTE E CHECAGEM DE MELHOR ÁREA + AUTO FARM FIST
----------------------------------------------------------------------
+weightBtn.MouseEnter:Connect(function()
+    if not autoWeightActive then
+        TweenService:Create(weightBtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+    end
+end)
+
+weightBtn.MouseLeave:Connect(function()
+    if not autoWeightActive then
+        TweenService:Create(weightBtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+    end
+end)
+
+local positionContent = tabContents["Position Man"]
+
+local posInfoBox = Instance.new("Frame")
+posInfoBox.Size = UDim2.new(1, 0, 0, 70)
+posInfoBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+posInfoBox.BorderSizePixel = 0
+posInfoBox.Parent = positionContent
+
+local posInfoCorner = Instance.new("UICorner")
+posInfoCorner.CornerRadius = UDim.new(0, 10)
+posInfoCorner.Parent = posInfoBox
+
+local posInfoText = Instance.new("TextLabel")
+posInfoText.Size = UDim2.new(1, -20, 1, -20)
+posInfoText.Position = UDim2.new(0, 10, 0, 10)
+posInfoText.BackgroundTransparency = 1
+posInfoText.Text = "No position saved"
+posInfoText.TextColor3 = Color3.fromRGB(200, 200, 210)
+posInfoText.Font = Enum.Font.Gotham
+posInfoText.TextSize = 14
+posInfoText.TextWrapped = true
+posInfoText.TextXAlignment = Enum.TextXAlignment.Left
+posInfoText.TextYAlignment = Enum.TextYAlignment.Top
+posInfoText.Parent = posInfoBox
+
+local saveBtnFrame = Instance.new("Frame")
+saveBtnFrame.Size = UDim2.new(1, 0, 0, 55)
+saveBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+saveBtnFrame.BorderSizePixel = 0
+saveBtnFrame.Parent = positionContent
+
+local saveBtnCorner = Instance.new("UICorner")
+saveBtnCorner.CornerRadius = UDim.new(0, 10)
+saveBtnCorner.Parent = saveBtnFrame
+
+local saveBtn = Instance.new("TextButton")
+saveBtn.Size = UDim2.new(1, 0, 1, 0)
+saveBtn.BackgroundTransparency = 1
+saveBtn.Text = "Save Current Position"
+saveBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+saveBtn.Font = Enum.Font.GothamSemibold
+saveBtn.TextSize = 16
+saveBtn.AutoButtonColor = false
+saveBtn.Parent = saveBtnFrame
+
+saveBtn.MouseButton1Click:Connect(function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        savedPoint = player.Character.HumanoidRootPart.CFrame
+        saveBtnFrame.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        saveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        posInfoText.Text = "Position saved! You will respawn here and be pulled back if you go too far."
+        
+        task.wait(0.5)
+        saveBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+        saveBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+    end
+end)
+
+saveBtn.MouseEnter:Connect(function()
+    TweenService:Create(saveBtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+end)
+
+saveBtn.MouseLeave:Connect(function()
+    TweenService:Create(saveBtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+end)
+
+local clearBtnFrame = Instance.new("Frame")
+clearBtnFrame.Size = UDim2.new(1, 0, 0, 55)
+clearBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+clearBtnFrame.BorderSizePixel = 0
+clearBtnFrame.Parent = positionContent
+
+local clearBtnCorner = Instance.new("UICorner")
+clearBtnCorner.CornerRadius = UDim.new(0, 10)
+clearBtnCorner.Parent = clearBtnFrame
+
+local clearBtn = Instance.new("TextButton")
+clearBtn.Size = UDim2.new(1, 0, 1, 0)
+clearBtn.BackgroundTransparency = 1
+clearBtn.Text = "Clear Saved Position"
+clearBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+clearBtn.Font = Enum.Font.GothamSemibold
+clearBtn.TextSize = 16
+clearBtn.AutoButtonColor = false
+clearBtn.Parent = clearBtnFrame
+
+clearBtn.MouseButton1Click:Connect(function()
+    savedPoint = nil
+    clearBtnFrame.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+    clearBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    posInfoText.Text = "Position cleared!"
+    
+    task.wait(0.5)
+    clearBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    clearBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+    posInfoText.Text = "No position saved"
+end)
+
+clearBtn.MouseEnter:Connect(function()
+    TweenService:Create(clearBtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+end)
+
+clearBtn.MouseLeave:Connect(function()
+    TweenService:Create(clearBtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+end)
+
+local configsContent = tabContents["Configs"]
+
+local keybindFrame = Instance.new("Frame")
+keybindFrame.Size = UDim2.new(1, 0, 0, 90)
+keybindFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+keybindFrame.BorderSizePixel = 0
+keybindFrame.Parent = configsContent
+
+local keybindCorner = Instance.new("UICorner")
+keybindCorner.CornerRadius = UDim.new(0, 10)
+keybindCorner.Parent = keybindFrame
+
+local keybindLabel = Instance.new("TextLabel")
+keybindLabel.Size = UDim2.new(1, -20, 0, 35)
+keybindLabel.Position = UDim2.new(0, 10, 0, 10)
+keybindLabel.BackgroundTransparency = 1
+keybindLabel.Text = "Toggle Keybind"
+keybindLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+keybindLabel.Font = Enum.Font.GothamSemibold
+keybindLabel.TextSize = 16
+keybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+keybindLabel.Parent = keybindFrame
+
+local currentKeybind = Enum.KeyCode.G
+local keybindButton = Instance.new("TextButton")
+keybindButton.Size = UDim2.new(0, 100, 0, 40)
+keybindButton.Position = UDim2.new(0, 10, 0, 45)
+keybindButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+keybindButton.BorderSizePixel = 0
+keybindButton.Text = "G"
+keybindButton.TextColor3 = Color3.fromRGB(100, 200, 255)
+keybindButton.Font = Enum.Font.GothamBold
+keybindButton.TextSize = 18
+keybindButton.AutoButtonColor = false
+keybindButton.Parent = keybindFrame
+
+local keybindBtnCorner = Instance.new("UICorner")
+keybindBtnCorner.CornerRadius = UDim.new(0, 8)
+keybindBtnCorner.Parent = keybindButton
+
+local waitingForKey = false
+
+keybindButton.MouseButton1Click:Connect(function()
+    if waitingForKey then return end
+    waitingForKey = true
+    keybindButton.Text = "..."
+    
+    local conn
+    conn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            currentKeybind = input.KeyCode
+            keybindButton.Text = input.KeyCode.Name
+            waitingForKey = false
+            conn:Disconnect()
+        end
+    end)
+end)
+
+keybindButton.MouseEnter:Connect(function()
+    TweenService:Create(keybindButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 55)}):Play()
+end)
+
+keybindButton.MouseLeave:Connect(function()
+    TweenService:Create(keybindButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+end)
+
+local autoRespawnFrame = Instance.new("Frame")
+autoRespawnFrame.Size = UDim2.new(1, 0, 0, 70)
+autoRespawnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+autoRespawnFrame.BorderSizePixel = 0
+autoRespawnFrame.Parent = configsContent
+
+local autoRespawnCorner = Instance.new("UICorner")
+autoRespawnCorner.CornerRadius = UDim.new(0, 10)
+autoRespawnCorner.Parent = autoRespawnFrame
+
+local autoRespawnLabel = Instance.new("TextLabel")
+autoRespawnLabel.Size = UDim2.new(0.65, 0, 1, 0)
+autoRespawnLabel.Position = UDim2.new(0, 20, 0, 0)
+autoRespawnLabel.BackgroundTransparency = 1
+autoRespawnLabel.Text = "Auto Respawn"
+autoRespawnLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+autoRespawnLabel.Font = Enum.Font.GothamSemibold
+autoRespawnLabel.TextSize = 16
+autoRespawnLabel.TextXAlignment = Enum.TextXAlignment.Left
+autoRespawnLabel.Parent = autoRespawnFrame
+
+local autoRespawnToggle = Instance.new("TextButton")
+autoRespawnToggle.Size = UDim2.new(0, 70, 0, 40)
+autoRespawnToggle.Position = UDim2.new(1, -90, 0.5, -20)
+autoRespawnToggle.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+autoRespawnToggle.BorderSizePixel = 0
+autoRespawnToggle.Text = "ON"
+autoRespawnToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoRespawnToggle.Font = Enum.Font.GothamBold
+autoRespawnToggle.TextSize = 16
+autoRespawnToggle.AutoButtonColor = false
+autoRespawnToggle.Parent = autoRespawnFrame
+
+local toggleCorner2 = Instance.new("UICorner")
+toggleCorner2.CornerRadius = UDim.new(0, 8)
+toggleCorner2.Parent = autoRespawnToggle
+
+local autoRespawnEnabled = true
+
+autoRespawnToggle.MouseButton1Click:Connect(function()
+    autoRespawnEnabled = not autoRespawnEnabled
+    if autoRespawnEnabled then
+        autoRespawnToggle.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        autoRespawnToggle.Text = "ON"
+    else
+        autoRespawnToggle.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+        autoRespawnToggle.Text = "OFF"
+    end
+end)
+
+local isOpen = false
+
+local function toggleUI()
+    isOpen = not isOpen
+    mainFrame.Visible = isOpen
+    
+    if isOpen then
+        mainFrame.Size = UDim2.new(0, 0, 0, 0)
+        mainFrame.Visible = true
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), 
+            {Size = UDim2.new(0, 600, 0, 480)}):Play()
+    else
+        TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), 
+            {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        task.wait(0.2)
+        mainFrame.Visible = false
+    end
+end
+
+toggleButton.MouseButton1Click:Connect(toggleUI)
+closeButton.MouseButton1Click:Connect(toggleUI)
+
+toggleButton.MouseEnter:Connect(function()
+    TweenService:Create(toggleButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 90, 0, 90)}):Play()
+    TweenService:Create(toggleLabel, TweenInfo.new(0.2), {TextSize = 22}):Play()
+end)
+
+toggleButton.MouseLeave:Connect(function()
+    TweenService:Create(toggleButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 80, 0, 80)}):Play()
+    TweenService:Create(toggleLabel, TweenInfo.new(0.2), {TextSize = 20}):Play()
+end)
+
+closeButton.MouseEnter:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 50, 50)}):Play()
+end)
+
+closeButton.MouseLeave:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == currentKeybind then
+        toggleUI()
+    end
+end)
+
 RunService.Heartbeat:Connect(function()
+    if savedPoint and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = player.Character.HumanoidRootPart
+        local distance = (hrp.Position - savedPoint.Position).Magnitude
+        if distance > 20 then
+            hrp.CFrame = savedPoint
+        end
+    end
+    
     if not selectedType then return end
 
     local char = player.Character
@@ -416,7 +901,6 @@ RunService.Heartbeat:Connect(function()
 
     local power = getCurrentStatus(selectedType)
 
-    -- Encontrar a melhor área
     local bestAreaName = findBestAreaName(selectedType, power)
     if bestAreaName and (not activeAreaObj or activeAreaObj.Name ~= bestAreaName) then
         local areaObj = getAreaObject(selectedType, bestAreaName)
@@ -425,12 +909,11 @@ RunService.Heartbeat:Connect(function()
             local ok, cf = teleportToAreaObject(areaObj)
             if ok then
                 currentAreaCF = cf
-                infoLabel.Text = DISPLAY[selectedType].." — Área: "..bestAreaName.." (req "..AREA_REQUIREMENTS[selectedType][bestAreaName].req..")"
+                infoText.Text = DISPLAY[selectedType].." — Area: "..bestAreaName.." (req "..AREA_REQUIREMENTS[selectedType][bestAreaName].req..")"
             end
         end
     end
 
-    -- Teleporte automático se sair da área
     if currentAreaCF then
         local dist = (hrp.Position - currentAreaCF.Position).Magnitude
         if dist > MAX_DISTANCE then
@@ -438,7 +921,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 
-    -- Auto farm FistStrength até 10T
     if selectedType == "FistStrength" then
         local bestReq = convertToNumber("10T")
         if power <= bestReq then
@@ -448,13 +930,11 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
----------------------------------------------------------------------
--- AUTO RESPAWN
----------------------------------------------------------------------
 local function bindHumanoidDeath(character)
     local hum = character:FindFirstChildWhichIsA("Humanoid")
     if not hum then return end
     hum.Died:Connect(function()
+        if not autoRespawnEnabled then return end
         task.wait(1)
         player:LoadCharacter()
     end)
@@ -463,6 +943,13 @@ end
 player.CharacterAdded:Connect(function(char)
     bindHumanoidDeath(char)
     task.wait(1)
+    
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    if savedPoint then
+        task.wait(0.2)
+        hrp.CFrame = savedPoint
+    end
+    
     if selectedType and activeAreaObj then
         local ok, cf = teleportToAreaObject(activeAreaObj)
         if ok then currentAreaCF = cf end
