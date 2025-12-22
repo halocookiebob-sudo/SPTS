@@ -441,6 +441,96 @@ local DISPLAY = {
 local categories = {"FistStrength","BodyToughness","PsychicPower","JumpForce","MovementSpeed"}
 local farmButtons = {}
 
+local CONFIG = {
+    Keybind = Enum.KeyCode.G,
+    AutoReconnectEnabled = false,
+    SelectedTraining = nil,
+    AutoWeightActive = false,
+    AutoSaveEnabled = true,
+    SavedPosition = nil,
+    FarmSettings = {},
+    TrainingEnabled = false
+}
+
+local CONFIG_FILE = "eSPTS_Config.json"
+
+local function SaveConfig()
+    if writefile then
+        local savedCF = nil
+        if savedPoint then
+            savedCF = {
+                X = savedPoint.X, Y = savedPoint.Y, Z = savedPoint.Z,
+                RX = savedPoint.RightVector.X, RY = savedPoint.RightVector.Y, RZ = savedPoint.RightVector.Z,
+                UX = savedPoint.UpVector.X, UY = savedPoint.UpVector.Y, UZ = savedPoint.UpVector.Z,
+                BX = savedPoint.LookVector.X, BY = savedPoint.LookVector.Y, BZ = savedPoint.LookVector.Z
+            }
+        end
+        
+        CONFIG.FarmSettings = {
+            FistStrength = getCurrentStatus("FistStrength"),
+            BodyToughness = getCurrentStatus("BodyToughness"),
+            PsychicPower = getCurrentStatus("PsychicPower"),
+            JumpForce = getCurrentStatus("JumpForce"),
+            MovementSpeed = getCurrentStatus("MovementSpeed")
+        }
+        
+        local configData = game:GetService("HttpService"):JSONEncode({
+            Keybind = CONFIG.Keybind.Name,
+            AutoReconnectEnabled = CONFIG.AutoReconnectEnabled,
+            SelectedTraining = selectedType,
+            AutoWeightActive = autoWeightActive,
+            AutoSaveEnabled = CONFIG.AutoSaveEnabled,
+            SavedPosition = savedCF,
+            FarmSettings = CONFIG.FarmSettings,
+            TrainingEnabled = (selectedType ~= nil)
+        })
+        writefile(CONFIG_FILE, configData)
+    end
+end
+
+local function LoadConfig()
+    if readfile and isfile and isfile(CONFIG_FILE) then
+        local success, data = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(readfile(CONFIG_FILE))
+        end)
+        if success and data then
+            if data.Keybind and Enum.KeyCode[data.Keybind] then
+                CONFIG.Keybind = Enum.KeyCode[data.Keybind]
+            else
+                CONFIG.Keybind = Enum.KeyCode.G
+            end
+            CONFIG.AutoReconnectEnabled = data.AutoReconnectEnabled or false
+            CONFIG.SelectedTraining = data.SelectedTraining
+            CONFIG.AutoWeightActive = data.AutoWeightActive or false
+            CONFIG.AutoSaveEnabled = data.AutoSaveEnabled ~= nil and data.AutoSaveEnabled or true
+            CONFIG.FarmSettings = data.FarmSettings or {}
+            CONFIG.TrainingEnabled = data.TrainingEnabled or false
+            
+            if data.SavedPosition then
+                local cfData = data.SavedPosition
+                savedPoint = CFrame.fromMatrix(
+                    Vector3.new(cfData.X, cfData.Y, cfData.Z),
+                    Vector3.new(cfData.RX, cfData.RY, cfData.RZ),
+                    Vector3.new(cfData.UX, cfData.UY, cfData.UZ),
+                    Vector3.new(cfData.BX, cfData.BY, cfData.BZ)
+                )
+                if posInfoText then
+                    posInfoText.Text = "Position loaded from config!"
+                end
+            end
+            
+            return true
+        end
+    end
+    return false
+end
+
+local function SaveOnChange()
+    if CONFIG.AutoSaveEnabled then
+        SaveConfig()
+    end
+end
+
 for _, cat in ipairs(categories) do
     local btnFrame = Instance.new("Frame")
     btnFrame.Size = UDim2.new(1, 0, 0, 55)
@@ -473,6 +563,7 @@ for _, cat in ipairs(categories) do
             btnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
             btn.TextColor3 = Color3.fromRGB(200, 200, 210)
             infoText.Text = "No active training"
+            SaveOnChange()
             return
         end
 
@@ -492,6 +583,7 @@ for _, cat in ipairs(categories) do
         if not areaName then
             infoText.Text = DISPLAY[cat].." — No available area"
             currentAreaCF = nil
+            SaveOnChange()
             return
         end
 
@@ -501,6 +593,7 @@ for _, cat in ipairs(categories) do
         if not areaObj then
             infoText.Text = "Area '"..areaName.."' not found!"
             currentAreaCF = nil
+            SaveOnChange()
             return
         end
 
@@ -511,6 +604,7 @@ for _, cat in ipairs(categories) do
         else
             infoText.Text = "Teleport failed!"
         end
+        SaveOnChange()
     end)
     
     btn.MouseEnter:Connect(function()
@@ -551,7 +645,7 @@ weightInfoText.TextXAlignment = Enum.TextXAlignment.Left
 weightInfoText.TextYAlignment = Enum.TextYAlignment.Top
 weightInfoText.Parent = weightInfoBox
 
-local autoWeightActive = false
+CONFIG.AutoWeightActive = CONFIG.AutoWeightActive or false
 
 local weightBtnFrame = Instance.new("Frame")
 weightBtnFrame.Size = UDim2.new(1, 0, 0, 55)
@@ -573,32 +667,56 @@ weightBtn.TextSize = 16
 weightBtn.AutoButtonColor = false
 weightBtn.Parent = weightBtnFrame
 
-weightBtn.MouseButton1Click:Connect(function()
-    autoWeightActive = not autoWeightActive
+local weightFarmConnection = nil
+
+local function startWeightFarm()
+    if weightFarmConnection then
+        weightFarmConnection:Disconnect()
+        weightFarmConnection = nil
+    end
     
-    if autoWeightActive then
+    weightFarmConnection = RunService.Heartbeat:Connect(function()
+        if not autoWeightActive then
+            if weightFarmConnection then
+                weightFarmConnection:Disconnect()
+                weightFarmConnection = nil
+            end
+            return
+        end
+        
+        local MSLoop = {{"Add_MS_Request"}}
+        local JFLoop = {{"Add_JF_Request"}}
+        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(MSLoop))
+        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(JFLoop))
+    end)
+end
+
+local function updateWeightButton()
+    if CONFIG.AutoWeightActive then
         weightBtnFrame.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
         weightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         weightBtn.Text = "Stop Auto Weight"
-        equipBestWeight()
-        
-        spawn(function()
-            while autoWeightActive do
-                local MSLoop = {{"Add_MS_Request"}}
-                local JFLoop = {{"Add_JF_Request"}}
-                game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(MSLoop))
-                game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(JFLoop))
-                task.wait(0.1)
-            end
-        end)
-        
         weightInfoText.Text = "Auto Weight active — farming MS and JF automatically"
+        equipBestWeight()
+        startWeightFarm()
     else
         weightBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
         weightBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
         weightBtn.Text = "Start Auto Weight"
         weightInfoText.Text = "Auto weight system inactive"
+        
+        if weightFarmConnection then
+            weightFarmConnection:Disconnect()
+            weightFarmConnection = nil
+        end
     end
+end
+
+weightBtn.MouseButton1Click:Connect(function()
+    autoWeightActive = not autoWeightActive
+    CONFIG.AutoWeightActive = autoWeightActive
+    updateWeightButton()
+    SaveOnChange()
 end)
 
 weightBtn.MouseEnter:Connect(function()
@@ -668,6 +786,7 @@ saveBtn.MouseButton1Click:Connect(function()
         task.wait(0.5)
         saveBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
         saveBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+        SaveOnChange()
     end
 end)
 
@@ -709,6 +828,7 @@ clearBtn.MouseButton1Click:Connect(function()
     clearBtnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     clearBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
     posInfoText.Text = "No position saved"
+    SaveOnChange()
 end)
 
 clearBtn.MouseEnter:Connect(function()
@@ -719,13 +839,13 @@ clearBtn.MouseLeave:Connect(function()
     TweenService:Create(clearBtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
 end)
 
-local configsContent = tabContents["Configs"]
+local ConfigsContent = tabContents["Configs"]
 
 local keybindFrame = Instance.new("Frame")
 keybindFrame.Size = UDim2.new(1, 0, 0, 90)
 keybindFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 keybindFrame.BorderSizePixel = 0
-keybindFrame.Parent = configsContent
+keybindFrame.Parent = ConfigsContent
 
 local keybindCorner = Instance.new("UICorner")
 keybindCorner.CornerRadius = UDim.new(0, 10)
@@ -742,7 +862,6 @@ keybindLabel.TextSize = 16
 keybindLabel.TextXAlignment = Enum.TextXAlignment.Left
 keybindLabel.Parent = keybindFrame
 
-local currentKeybind = Enum.KeyCode.G
 local keybindButton = Instance.new("TextButton")
 keybindButton.Size = UDim2.new(0, 100, 0, 40)
 keybindButton.Position = UDim2.new(0, 10, 0, 45)
@@ -770,8 +889,9 @@ keybindButton.MouseButton1Click:Connect(function()
     conn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
         if input.UserInputType == Enum.UserInputType.Keyboard then
-            currentKeybind = input.KeyCode
+            CONFIG.Keybind = input.KeyCode
             keybindButton.Text = input.KeyCode.Name
+            SaveOnChange()
             waitingForKey = false
             conn:Disconnect()
         end
@@ -786,86 +906,203 @@ keybindButton.MouseLeave:Connect(function()
     TweenService:Create(keybindButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
 end)
 
-local autoRespawnFrame = Instance.new("Frame")
-autoRespawnFrame.Size = UDim2.new(1, 0, 0, 70)
-autoRespawnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-autoRespawnFrame.BorderSizePixel = 0
-autoRespawnFrame.Parent = configsContent
+local autoReconnectFrame = Instance.new("Frame")
+autoReconnectFrame.Size = UDim2.new(1, 0, 0, 70)
+autoReconnectFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+autoReconnectFrame.BorderSizePixel = 0
+autoReconnectFrame.Parent = ConfigsContent
 
-local autoRespawnCorner = Instance.new("UICorner")
-autoRespawnCorner.CornerRadius = UDim.new(0, 10)
-autoRespawnCorner.Parent = autoRespawnFrame
+local autoReconnectCorner = Instance.new("UICorner")
+autoReconnectCorner.CornerRadius = UDim.new(0, 10)
+autoReconnectCorner.Parent = autoReconnectFrame
 
-local autoRespawnLabel = Instance.new("TextLabel")
-autoRespawnLabel.Size = UDim2.new(0.65, 0, 1, 0)
-autoRespawnLabel.Position = UDim2.new(0, 20, 0, 0)
-autoRespawnLabel.BackgroundTransparency = 1
-autoRespawnLabel.Text = "Auto Respawn"
-autoRespawnLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
-autoRespawnLabel.Font = Enum.Font.GothamSemibold
-autoRespawnLabel.TextSize = 16
-autoRespawnLabel.TextXAlignment = Enum.TextXAlignment.Left
-autoRespawnLabel.Parent = autoRespawnFrame
+local autoReconnectLabel = Instance.new("TextLabel")
+autoReconnectLabel.Size = UDim2.new(0.65, 0, 1, 0)
+autoReconnectLabel.Position = UDim2.new(0, 20, 0, 0)
+autoReconnectLabel.BackgroundTransparency = 1
+autoReconnectLabel.Text = "Auto Reconnect"
+autoReconnectLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+autoReconnectLabel.Font = Enum.Font.GothamSemibold
+autoReconnectLabel.TextSize = 16
+autoReconnectLabel.TextXAlignment = Enum.TextXAlignment.Left
+autoReconnectLabel.Parent = autoReconnectFrame
 
-local autoRespawnToggle = Instance.new("TextButton")
-autoRespawnToggle.Size = UDim2.new(0, 70, 0, 40)
-autoRespawnToggle.Position = UDim2.new(1, -90, 0.5, -20)
-autoRespawnToggle.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
-autoRespawnToggle.BorderSizePixel = 0
-autoRespawnToggle.Text = "ON"
-autoRespawnToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoRespawnToggle.Font = Enum.Font.GothamBold
-autoRespawnToggle.TextSize = 16
-autoRespawnToggle.AutoButtonColor = false
-autoRespawnToggle.Parent = autoRespawnFrame
+local autoReconnectToggle = Instance.new("TextButton")
+autoReconnectToggle.Size = UDim2.new(0, 70, 0, 40)
+autoReconnectToggle.Position = UDim2.new(1, -90, 0.5, -20)
+autoReconnectToggle.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+autoReconnectToggle.BorderSizePixel = 0
+autoReconnectToggle.Text = "OFF"
+autoReconnectToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoReconnectToggle.Font = Enum.Font.GothamBold
+autoReconnectToggle.TextSize = 16
+autoReconnectToggle.AutoButtonColor = false
+autoReconnectToggle.Parent = autoReconnectFrame
 
-local toggleCorner2 = Instance.new("UICorner")
-toggleCorner2.CornerRadius = UDim.new(0, 8)
-toggleCorner2.Parent = autoRespawnToggle
+local toggleCorner3 = Instance.new("UICorner")
+toggleCorner3.CornerRadius = UDim.new(0, 8)
+toggleCorner3.Parent = autoReconnectToggle
 
-local autoRespawnEnabled = true
-
-autoRespawnToggle.MouseButton1Click:Connect(function()
-    autoRespawnEnabled = not autoRespawnEnabled
-    if autoRespawnEnabled then
-        autoRespawnToggle.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
-        autoRespawnToggle.Text = "ON"
-    else
-        autoRespawnToggle.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-        autoRespawnToggle.Text = "OFF"
+local teleporting = false
+local function SetupAutoReconnect()
+    if CONFIG.AutoReconnectEnabled then
+        local PromptGui = game:GetService("CoreGui"):WaitForChild("RobloxPromptGui")
+        local PromptOverlay = PromptGui:WaitForChild("promptOverlay")
+        
+        PromptOverlay.ChildAdded:Connect(function(child)
+            if child.Name == "ErrorPrompt" and CONFIG.AutoReconnectEnabled then
+                if not teleporting then
+                    teleporting = true
+                    task.spawn(function()
+                        while CONFIG.AutoReconnectEnabled and teleporting do
+                            game:GetService("TeleportService"):Teleport(game.PlaceId, player)
+                            task.wait(2)
+                        end
+                    end)
+                end
+            end
+        end)
     end
+end
+
+autoReconnectToggle.MouseButton1Click:Connect(function()
+    CONFIG.AutoReconnectEnabled = not CONFIG.AutoReconnectEnabled
+    if CONFIG.AutoReconnectEnabled then
+        autoReconnectToggle.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        autoReconnectToggle.Text = "ON"
+        SetupAutoReconnect()
+    else
+        autoReconnectToggle.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+        autoReconnectToggle.Text = "OFF"
+        teleporting = false
+    end
+    SaveOnChange()
 end)
 
+autoReconnectToggle.MouseEnter:Connect(function()
+    TweenService:Create(autoReconnectToggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 55)}):Play()
+end)
+
+autoReconnectToggle.MouseLeave:Connect(function()
+    TweenService:Create(autoReconnectToggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+end)
+
+local function ApplyLoadedConfig()
+    if keybindButton and CONFIG.Keybind then
+        keybindButton.Text = CONFIG.Keybind.Name
+    end
+    
+    if autoReconnectToggle and CONFIG.AutoReconnectEnabled ~= nil then
+        autoReconnectToggle.BackgroundColor3 = CONFIG.AutoReconnectEnabled and Color3.fromRGB(50, 150, 100) or Color3.fromRGB(150, 50, 50)
+        autoReconnectToggle.Text = CONFIG.AutoReconnectEnabled and "ON" or "OFF"
+        if CONFIG.AutoReconnectEnabled then
+            SetupAutoReconnect()
+        end
+    end
+    
+    if CONFIG.AutoWeightActive ~= nil then
+        autoWeightActive = CONFIG.AutoWeightActive
+        updateWeightButton()
+    end
+    
+    if CONFIG.SelectedTraining then
+        selectedType = CONFIG.SelectedTraining
+        
+        for cat, btnData in pairs(farmButtons) do
+            if cat == selectedType then
+                btnData.frame.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+                btnData.button.TextColor3 = Color3.fromRGB(255, 255, 255)
+                
+                local power = getCurrentStatus(cat)
+                local areaName = findBestAreaName(cat, power)
+                
+                if areaName then
+                    local areaObj = getAreaObject(cat, areaName)
+                    activeAreaObj = areaObj
+                    if areaObj then
+                        local ok, cf = teleportToAreaObject(areaObj)
+                        if ok then
+                            currentAreaCF = cf
+                            if infoText then
+                                infoText.Text = DISPLAY[cat].." — Area: "..areaName.." (req "..AREA_REQUIREMENTS[cat][areaName].req..")"
+                            end
+                        end
+                    end
+                end
+            else
+                btnData.frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+                btnData.button.TextColor3 = Color3.fromRGB(200, 200, 210)
+            end
+        end
+        
+        if infoText and not CONFIG.TrainingEnabled then
+            infoText.Text = "No active training"
+        end
+    end
+    
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and savedPoint then
+        task.wait(0.5)
+        player.Character.HumanoidRootPart.CFrame = savedPoint
+    end
+end
+
+local configLoaded = LoadConfig()
+if configLoaded then
+    task.wait(0.1)
+    ApplyLoadedConfig()
+end
+
 local isOpen = false
+local uiToggling = false
 
 local function toggleUI()
+    if uiToggling then return end
+    uiToggling = true
+    
     isOpen = not isOpen
-    mainFrame.Visible = isOpen
     
     if isOpen then
         mainFrame.Size = UDim2.new(0, 0, 0, 0)
         mainFrame.Visible = true
         TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), 
             {Size = UDim2.new(0, 600, 0, 480)}):Play()
+        
+        task.wait(0.3)
+        uiToggling = false
     else
         TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), 
             {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        
         task.wait(0.2)
         mainFrame.Visible = false
+        uiToggling = false
     end
 end
 
-toggleButton.MouseButton1Click:Connect(toggleUI)
-closeButton.MouseButton1Click:Connect(toggleUI)
+toggleButton.MouseButton1Click:Connect(function()
+    if not uiToggling then
+        toggleUI()
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    if not uiToggling and isOpen then
+        toggleUI()
+    end
+end)
 
 toggleButton.MouseEnter:Connect(function()
-    TweenService:Create(toggleButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 90, 0, 90)}):Play()
-    TweenService:Create(toggleLabel, TweenInfo.new(0.2), {TextSize = 22}):Play()
+    if not uiToggling then
+        TweenService:Create(toggleButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 90, 0, 90)}):Play()
+        TweenService:Create(toggleLabel, TweenInfo.new(0.2), {TextSize = 22}):Play()
+    end
 end)
 
 toggleButton.MouseLeave:Connect(function()
-    TweenService:Create(toggleButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 80, 0, 80)}):Play()
-    TweenService:Create(toggleLabel, TweenInfo.new(0.2), {TextSize = 20}):Play()
+    if not uiToggling then
+        TweenService:Create(toggleButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 80, 0, 80)}):Play()
+        TweenService:Create(toggleLabel, TweenInfo.new(0.2), {TextSize = 20}):Play()
+    end
 end)
 
 closeButton.MouseEnter:Connect(function()
@@ -878,7 +1115,7 @@ end)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    if input.KeyCode == currentKeybind then
+    if input.KeyCode == CONFIG.Keybind and not uiToggling then
         toggleUI()
     end
 end)
@@ -930,18 +1167,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-local function bindHumanoidDeath(character)
-    local hum = character:FindFirstChildWhichIsA("Humanoid")
-    if not hum then return end
-    hum.Died:Connect(function()
-        if not autoRespawnEnabled then return end
-        task.wait(1)
-        player:LoadCharacter()
-    end)
-end
-
 player.CharacterAdded:Connect(function(char)
-    bindHumanoidDeath(char)
     task.wait(1)
     
     local hrp = char:WaitForChild("HumanoidRootPart", 5)
@@ -956,4 +1182,9 @@ player.CharacterAdded:Connect(function(char)
     end
 end)
 
-if player.Character then bindHumanoidDeath(player.Character) end
+if player.Character then
+    task.wait(1)
+    if savedPoint and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = savedPoint
+    end
+end
