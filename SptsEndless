@@ -1169,13 +1169,20 @@ end)
 
 player.CharacterAdded:Connect(function(char)
     task.wait(1)
-    
+
     local hrp = char:WaitForChild("HumanoidRootPart", 5)
+
     if savedPoint then
         task.wait(0.2)
         hrp.CFrame = savedPoint
     end
-    
+
+    if CONFIG.AutoWeightActive then
+        task.wait(0.33)
+        equipBestWeight()
+        startWeightFarm()
+    end
+
     if selectedType and activeAreaObj then
         local ok, cf = teleportToAreaObject(activeAreaObj)
         if ok then currentAreaCF = cf end
