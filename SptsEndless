@@ -1209,7 +1209,7 @@ end
 local function LoadExternalScripts()
     local scripts = {
         {
-            name = "Shocker",
+            name = "ShockerLL22 Script",
             url = "https://raw.githubusercontent.com/ShockerLL22/spts-classic-main/refs/heads/main/void.lua"
         }
         -- Coloca mais scripts aqui se precisar:
