@@ -1195,3 +1195,10 @@ if player.Character then
         player.Character.HumanoidRootPart.CFrame = savedPoint
     end
 end
+
+if queue_on_teleport then
+    queue_on_teleport([[
+        wait(2)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/halocookiebob-sudo/SPTS/refs/heads/main/SptsEndless", true))()
+    ]])
+end
