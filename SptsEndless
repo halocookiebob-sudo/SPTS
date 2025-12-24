@@ -1199,9 +1199,9 @@ end
 if queue_on_teleport then
     queue_on_teleport([[
         wait(2)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/halocookiebob-sudo/SPTS/refs/heads/main/SptsEndless", true))()
+        -- loadstring(game:HttpGet("https://raw.githubusercontent.com/halocookiebob-sudo/SPTS/refs/heads/main/SptsEndless", true))()
         
         wait(1)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/ShockerLL22/spts-classic-main/refs/heads/main/void.lua", true))()
+        -- loadstring(game:HttpGet("https://raw.githubusercontent.com/ShockerLL22/spts-classic-main/refs/heads/main/void.lua", true))()
     ]])
 end
