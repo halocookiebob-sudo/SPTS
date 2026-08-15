@@ -11,6 +11,76 @@ local ap = workspace:WaitForChild("Map"):WaitForChild("Training_Collisions")
 local re = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
 local hs = game:GetService("HttpService")
 
+local ti = {
+    f = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    m = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    s = TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    b = TweenInfo.new(0.50, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    bi = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+    e = TweenInfo.new(0.60, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+    sm = TweenInfo.new(0.30, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+}
+
+local yt = {}
+
+local function xt(w)
+    if yt[w] then yt[w]:Cancel(); yt[w] = nil end
+end
+
+local function pt(w, w2, w3)
+    xt(w)
+    local w4 = tw:Create(w, w2, w3)
+    yt[w] = w4
+    w4:Play()
+    w4.Completed:Connect(function(w5)
+        if w5 == Enum.TweenStatus.Completed then yt[w] = nil end
+    end)
+    return w4
+end
+
+local function mt(w, w2, w3, w4)
+    local w5 = w2.X.Offset or 56
+    local w6 = w2.Y.Offset or 28
+    local w7 = w6 - 6
+    local w8 = 3
+    local w9 = w5 - w7 - 3
+    local w10 = Instance.new("Frame", w)
+    w10.Size = UDim2.new(0, w5, 0, w6)
+    w10.Position = w3
+    w10.AnchorPoint = Vector2.new(0.5, 0.5)
+    w10.BorderSizePixel = 0
+    w10.BackgroundColor3 = w4 and Color3.fromRGB(50, 220, 100) or Color3.fromRGB(60, 60, 70)
+    do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, w6 / 2); q.Parent = w10 end
+    local w11 = Instance.new("Frame", w10)
+    w11.Size = UDim2.new(0, w7, 0, w7)
+    w11.Position = UDim2.new(0, w4 and w9 or w8, 0.5, 0)
+    w11.AnchorPoint = Vector2.new(0, 0.5)
+    w11.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    w11.BorderSizePixel = 0
+    do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, w7 / 2); q.Parent = w11 end
+    local w12 = Instance.new("TextButton", w10)
+    w12.Size = UDim2.new(1, 0, 1, 0)
+    w12.BackgroundTransparency = 1
+    w12.Text = ""
+    w12.ZIndex = w10.ZIndex + 2
+    local w13 = {v = w4, t = w10, k = w11, ox = w8, nx = w9}
+    return w12, w13
+end
+
+local function stg(w, w2)
+    if not w then return end
+    w.v = w2
+    pt(w.t, ti.f, {BackgroundColor3 = w2 and Color3.fromRGB(50, 220, 100) or Color3.fromRGB(60, 60, 70)})
+    pt(w.k, ti.f, {Position = UDim2.new(0, w2 and w.nx or w.ox, 0.5, 0)})
+end
+
+local function ba(w, w2, w3, w4)
+    w.MouseEnter:Connect(function() pt(w, ti.f, w3) end)
+    w.MouseLeave:Connect(function() pt(w, ti.f, w2) end)
+    w.MouseButton1Down:Connect(function() pt(w, ti.f, w4) end)
+    w.MouseButton1Up:Connect(function() pt(w, ti.f, w3) end)
+end
+
 local ar = {
     BodyToughness = {
         FireBathTouchPart = {req = "500", multi = "x10"},
@@ -226,8 +296,7 @@ tgb.BorderSizePixel = 0
 tgb.Text = ""
 tgb.AutoButtonColor = false
 tgb.Parent = mg
-
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 12) w.Parent = tgb end
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 12); q.Parent = tgb end
 
 local tgl = Instance.new("TextLabel")
 tgl.Size = UDim2.new(1, 0, 1, 0)
@@ -238,61 +307,75 @@ tgl.Font = Enum.Font.GothamBold
 tgl.TextSize = 20
 tgl.Parent = tgb
 
+ba(tgb,
+    {Size = UDim2.new(0, 80, 0, 80)},
+    {Size = UDim2.new(0, 90, 0, 90)},
+    {Size = UDim2.new(0, 74, 0, 74)}
+)
+
+tgb.MouseEnter:Connect(function()
+    pt(tgl, ti.f, {TextSize = 22})
+end)
+tgb.MouseLeave:Connect(function()
+    pt(tgl, ti.f, {TextSize = 20})
+end)
+
 local mf = Instance.new("Frame")
 mf.Name = "MainFrame"
 mf.Size = UDim2.new(0, 600, 0, 480)
 mf.Position = UDim2.new(0.5, 0, 0.5, 0)
 mf.AnchorPoint = Vector2.new(0.5, 0.5)
-mf.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+mf.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 mf.BorderSizePixel = 0
 mf.Visible = false
 mf.Parent = mg
-
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 16) w.Parent = mf end
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 16); q.Parent = mf end
 
 local tp = Instance.new("Frame")
 tp.Name = "TopBar"
 tp.Size = UDim2.new(1, 0, 0, 50)
-tp.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+tp.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
 tp.BorderSizePixel = 0
 tp.Parent = mf
-
 do
-    local w = Instance.new("UICorner")
-    w.CornerRadius = UDim.new(0, 16)
-    w.Parent = tp
-    local w2 = Instance.new("Frame")
-    w2.Size = UDim2.new(1, 0, 0, 16)
-    w2.Position = UDim2.new(0, 0, 1, -16)
-    w2.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-    w2.BorderSizePixel = 0
-    w2.Parent = tp
+    local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 16); q.Parent = tp
+    local q2 = Instance.new("Frame")
+    q2.Size = UDim2.new(1, 0, 0, 16)
+    q2.Position = UDim2.new(0, 0, 1, -16)
+    q2.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+    q2.BorderSizePixel = 0
+    q2.Parent = tp
 end
 
 local tpl = Instance.new("TextLabel")
-tpl.Size = UDim2.new(0, 200, 1, 0)
-tpl.Position = UDim2.new(0, 20, 0, 0)
+tpl.Size = UDim2.new(1, -60, 1, 0)
+tpl.Position = UDim2.new(0, 14, 0, 0)
 tpl.BackgroundTransparency = 1
 tpl.Text = "eSPTS"
-tpl.TextColor3 = Color3.fromRGB(100, 200, 255)
+tpl.TextColor3 = Color3.fromRGB(255, 255, 255)
 tpl.Font = Enum.Font.GothamBold
-tpl.TextSize = 20
+tpl.TextSize = 22
 tpl.TextXAlignment = Enum.TextXAlignment.Left
 tpl.Parent = tp
 
 local cb = Instance.new("TextButton")
-cb.Size = UDim2.new(0, 40, 0, 40)
-cb.Position = UDim2.new(1, -45, 0, 5)
-cb.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+cb.Size = UDim2.new(0, 28, 0, 28)
+cb.Position = UDim2.new(1, -14, 0.5, 0)
+cb.AnchorPoint = Vector2.new(1, 0.5)
+cb.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 cb.BorderSizePixel = 0
-cb.Text = "X"
-cb.TextColor3 = Color3.fromRGB(255, 100, 100)
-cb.Font = Enum.Font.GothamBold
-cb.TextSize = 18
+cb.Text = ""
 cb.AutoButtonColor = false
 cb.Parent = tp
-
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 8) w.Parent = cb end
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 8); q.Parent = cb end
+local cb2 = Instance.new("TextLabel")
+cb2.Size = UDim2.new(1, 0, 1, 0)
+cb2.BackgroundTransparency = 1
+cb2.Text = "X"
+cb2.TextColor3 = Color3.fromRGB(255, 255, 255)
+cb2.Font = Enum.Font.GothamBold
+cb2.TextSize = 16
+cb2.Parent = cb
 
 local tcg = Instance.new("Frame")
 tcg.Name = "TabContainer"
@@ -300,13 +383,12 @@ tcg.Size = UDim2.new(1, -40, 0, 40)
 tcg.Position = UDim2.new(0, 20, 0, 60)
 tcg.BackgroundTransparency = 1
 tcg.Parent = mf
-
 do
-    local w = Instance.new("UIListLayout")
-    w.FillDirection = Enum.FillDirection.Horizontal
-    w.Padding = UDim.new(0, 10)
-    w.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    w.Parent = tcg
+    local q = Instance.new("UIListLayout")
+    q.FillDirection = Enum.FillDirection.Horizontal
+    q.Padding = UDim.new(0, 10)
+    q.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    q.Parent = tcg
 end
 
 local cf = Instance.new("Frame")
@@ -323,32 +405,33 @@ local sv = nil
 
 for w, w2 in ipairs(tbs) do
     local w3 = Instance.new("TextButton")
-    w3.Size = UDim2.new(0, 130, 1, 0)
-    w3.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    w3.Size = UDim2.new(0, 130, 0, 36)
+    w3.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
     w3.BorderSizePixel = 0
     w3.Text = w2
-    w3.TextColor3 = Color3.fromRGB(150, 150, 160)
-    w3.Font = Enum.Font.GothamSemibold
-    w3.TextSize = 14
+    w3.TextColor3 = Color3.fromRGB(180, 180, 180)
+    w3.Font = Enum.Font.GothamBold
+    w3.TextSize = 13
     w3.AutoButtonColor = false
     w3.Parent = tcg
-    do local w4 = Instance.new("UICorner") w4.CornerRadius = UDim.new(0, 8) w4.Parent = w3 end
+    do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 8); q.Parent = w3 end
     tbn[w2] = w3
     local w5 = Instance.new("ScrollingFrame")
     w5.Size = UDim2.new(1, 0, 1, 0)
     w5.BackgroundTransparency = 1
     w5.BorderSizePixel = 0
-    w5.ScrollBarThickness = 6
-    w5.ScrollBarImageColor3 = Color3.fromRGB(100, 200, 255)
+    w5.ScrollBarThickness = 4
+    w5.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
+    w5.ScrollBarImageTransparency = 0.5
     w5.Visible = (w == 1)
     w5.CanvasSize = UDim2.new(0, 0, 0, 0)
     w5.AutomaticCanvasSize = Enum.AutomaticSize.Y
     w5.Parent = cf
     do
-        local w6 = Instance.new("UIListLayout")
-        w6.Padding = UDim.new(0, 12)
-        w6.SortOrder = Enum.SortOrder.LayoutOrder
-        w6.Parent = w5
+        local q = Instance.new("UIListLayout")
+        q.Padding = UDim.new(0, 10)
+        q.SortOrder = Enum.SortOrder.LayoutOrder
+        q.Parent = w5
     end
     tcs[w2] = w5
 end
@@ -356,11 +439,9 @@ end
 local function sw(w)
     for w2, w3 in pairs(tbn) do
         if w2 == w then
-            w3.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-            w3.TextColor3 = Color3.fromRGB(255, 255, 255)
+            pt(w3, ti.f, {BackgroundColor3 = Color3.fromRGB(100, 150, 255), TextColor3 = Color3.fromRGB(255, 255, 255), Size = UDim2.new(0, 134, 0, 40)})
         else
-            w3.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-            w3.TextColor3 = Color3.fromRGB(150, 150, 160)
+            pt(w3, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42), TextColor3 = Color3.fromRGB(180, 180, 180), Size = UDim2.new(0, 130, 0, 36)})
         end
     end
     for w2, w3 in pairs(tcs) do
@@ -371,14 +452,22 @@ end
 for w2, w3 in pairs(tbn) do
     w3.MouseButton1Click:Connect(function() sw(w2) end)
     w3.MouseEnter:Connect(function()
-        if w3.BackgroundColor3 ~= Color3.fromRGB(100, 200, 255) then
-            tw:Create(w3, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+        if w3.BackgroundColor3 ~= Color3.fromRGB(100, 150, 255) then
+            pt(w3, ti.f, {BackgroundColor3 = Color3.fromRGB(45, 45, 52), Size = UDim2.new(0, 134, 0, 40), TextColor3 = Color3.fromRGB(220, 220, 220)})
         end
     end)
     w3.MouseLeave:Connect(function()
-        if w3.BackgroundColor3 ~= Color3.fromRGB(100, 200, 255) then
-            tw:Create(w3, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+        if w3.BackgroundColor3 ~= Color3.fromRGB(100, 150, 255) then
+            pt(w3, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42), Size = UDim2.new(0, 130, 0, 36), TextColor3 = Color3.fromRGB(180, 180, 180)})
+        else
+            pt(w3, ti.f, {Size = UDim2.new(0, 134, 0, 40)})
         end
+    end)
+    w3.MouseButton1Down:Connect(function()
+        pt(w3, ti.f, {Size = UDim2.new(0, 126, 0, 32)})
+    end)
+    w3.MouseButton1Up:Connect(function()
+        pt(w3, ti.f, {Size = UDim2.new(0, 134, 0, 40)})
     end)
 end
 
@@ -391,18 +480,18 @@ local ac = nil
 
 local ib = Instance.new("Frame")
 ib.Size = UDim2.new(1, 0, 0, 70)
-ib.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+ib.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 ib.BorderSizePixel = 0
 ib.Parent = fc
-
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = ib end
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 10); q.Parent = ib end
+do local q = Instance.new("UIStroke"); q.Color = Color3.fromRGB(50, 50, 60); q.Parent = ib end
 
 local it = Instance.new("TextLabel")
 it.Size = UDim2.new(1, -20, 1, -20)
 it.Position = UDim2.new(0, 10, 0, 10)
 it.BackgroundTransparency = 1
 it.Text = "No active training"
-it.TextColor3 = Color3.fromRGB(200, 200, 210)
+it.TextColor3 = Color3.fromRGB(200, 200, 200)
 it.Font = Enum.Font.Gotham
 it.TextSize = 14
 it.TextWrapped = true
@@ -489,7 +578,7 @@ local function lc()
                     Vector3.new(w3.UX, w3.UY, w3.UZ),
                     Vector3.new(w3.BX, w3.BY, w3.BZ)
                 )
-                if pt then pt.Text = "Position loaded from config!" end
+                if px then px.Text = "Position loaded from config!" end
             end
             return true
         end
@@ -504,72 +593,74 @@ end
 for _, w in ipairs(cg) do
     local w1 = Instance.new("Frame")
     w1.Size = UDim2.new(1, 0, 0, 55)
-    w1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    w1.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
     w1.BorderSizePixel = 0
     w1.Parent = fc
-    do local w2 = Instance.new("UICorner") w2.CornerRadius = UDim.new(0, 10) w2.Parent = w1 end
-    local w3 = Instance.new("TextButton")
-    w3.Size = UDim2.new(1, 0, 1, 0)
-    w3.BackgroundTransparency = 1
-    w3.Text = dp[w]
-    w3.TextColor3 = Color3.fromRGB(200, 200, 210)
-    w3.Font = Enum.Font.GothamSemibold
-    w3.TextSize = 16
-    w3.AutoButtonColor = false
-    w3.Parent = w1
-    fb[w] = {f = w1, b = w3}
+    do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 10); q.Parent = w1 end
+    local w2 = Instance.new("TextLabel")
+    w2.Size = UDim2.new(1, -80, 1, 0)
+    w2.Position = UDim2.new(0, 15, 0, 0)
+    w2.BackgroundTransparency = 1
+    w2.Text = dp[w]
+    w2.TextColor3 = Color3.fromRGB(200, 200, 200)
+    w2.Font = Enum.Font.GothamBold
+    w2.TextSize = 14
+    w2.TextXAlignment = Enum.TextXAlignment.Left
+    w2.Parent = w1
+    local w3, w4 = mt(w1, UDim2.new(0, 56, 0, 28), UDim2.new(1, -35, 0.5, 0), false)
+    fb[w] = {f = w1, l = w2, tg = w4}
+    w1.MouseEnter:Connect(function()
+        if st ~= w then pt(w1, ti.f, {BackgroundColor3 = Color3.fromRGB(45, 45, 52)}) end
+    end)
+    w1.MouseLeave:Connect(function()
+        if st ~= w then pt(w1, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)}) end
+    end)
     w3.MouseButton1Click:Connect(function()
-        if st == w then
+        local on = not w4.v
+        stg(w4, on)
+        if on then
+            for w5, w6 in pairs(fb) do
+                if w5 ~= w then
+                    stg(w6.tg, false)
+                    pt(w6.f, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)})
+                    w6.l.TextColor3 = Color3.fromRGB(200, 200, 200)
+                end
+            end
+            st = w
+            pt(w1, ti.f, {BackgroundColor3 = Color3.fromRGB(40, 55, 50)})
+            w2.TextColor3 = Color3.fromRGB(255, 255, 255)
+            local w5 = gcs(w)
+            local w6 = fba(w, w5)
+            if not w6 then
+                it.Text = dp[w] .. " \226\128\148 No available area"
+                ac = nil
+                soc()
+                return
+            end
+            local w7 = gao(w, w6)
+            ao = w7
+            if not w7 then
+                it.Text = "Area '" .. w6 .. "' not found!"
+                ac = nil
+                soc()
+                return
+            end
+            local w8, w9 = tta(w7)
+            if w8 then
+                ac = w9
+                it.Text = dp[w] .. " \226\128\148 Area: " .. w6 .. " (req " .. ar[w][w6].req .. ")"
+            else
+                it.Text = "Teleport failed!"
+            end
+        else
             st = nil
             ao = nil
             ac = nil
-            w1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-            w3.TextColor3 = Color3.fromRGB(200, 200, 210)
+            pt(w1, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)})
+            w2.TextColor3 = Color3.fromRGB(200, 200, 200)
             it.Text = "No active training"
-            soc()
-            return
-        end
-        if st then
-            fb[st].f.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-            fb[st].b.TextColor3 = Color3.fromRGB(200, 200, 210)
-        end
-        st = w
-        w1.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
-        w3.TextColor3 = Color3.fromRGB(255, 255, 255)
-        local w4 = gcs(w)
-        local w5 = fba(w, w4)
-        if not w5 then
-            it.Text = dp[w] .. " \226\128\148 No available area"
-            ac = nil
-            soc()
-            return
-        end
-        local w6 = gao(w, w5)
-        ao = w6
-        if not w6 then
-            it.Text = "Area '" .. w5 .. "' not found!"
-            ac = nil
-            soc()
-            return
-        end
-        local w7, w8 = tta(w6)
-        if w7 then
-            ac = w8
-            it.Text = dp[w] .. " \226\128\148 Area: " .. w5 .. " (req " .. ar[w][w5].req .. ")"
-        else
-            it.Text = "Teleport failed!"
         end
         soc()
-    end)
-    w3.MouseEnter:Connect(function()
-        if st ~= w then
-            tw:Create(w1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
-        end
-    end)
-    w3.MouseLeave:Connect(function()
-        if st ~= w then
-            tw:Create(w1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
-        end
     end)
 end
 
@@ -577,18 +668,18 @@ local wc = tcs["Auto Weights"]
 
 local wib = Instance.new("Frame")
 wib.Size = UDim2.new(1, 0, 0, 70)
-wib.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+wib.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 wib.BorderSizePixel = 0
 wib.Parent = wc
-
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = wib end
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 10); q.Parent = wib end
+do local q = Instance.new("UIStroke"); q.Color = Color3.fromRGB(50, 50, 60); q.Parent = wib end
 
 local wit = Instance.new("TextLabel")
 wit.Size = UDim2.new(1, -20, 1, -20)
 wit.Position = UDim2.new(0, 10, 0, 10)
 wit.BackgroundTransparency = 1
 wit.Text = "Auto weight system inactive"
-wit.TextColor3 = Color3.fromRGB(200, 200, 210)
+wit.TextColor3 = Color3.fromRGB(200, 200, 200)
 wit.Font = Enum.Font.Gotham
 wit.TextSize = 14
 wit.TextWrapped = true
@@ -598,29 +689,31 @@ wit.Parent = wib
 
 local wbf = Instance.new("Frame")
 wbf.Size = UDim2.new(1, 0, 0, 55)
-wbf.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+wbf.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
 wbf.BorderSizePixel = 0
 wbf.Parent = wc
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 10); q.Parent = wbf end
 
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = wbf end
+local wbl = Instance.new("TextLabel")
+wbl.Size = UDim2.new(1, -80, 1, 0)
+wbl.Position = UDim2.new(0, 15, 0, 0)
+wbl.BackgroundTransparency = 1
+wbl.Text = "Auto Weight"
+wbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+wbl.Font = Enum.Font.GothamBold
+wbl.TextSize = 14
+wbl.TextXAlignment = Enum.TextXAlignment.Left
+wbl.Parent = wbf
 
-local wbt = Instance.new("TextButton")
-wbt.Size = UDim2.new(1, 0, 1, 0)
-wbt.BackgroundTransparency = 1
-wbt.Text = "Start Auto Weight"
-wbt.TextColor3 = Color3.fromRGB(200, 200, 210)
-wbt.Font = Enum.Font.GothamSemibold
-wbt.TextSize = 16
-wbt.AutoButtonColor = false
-wbt.Parent = wbf
+local wbt, wts = mt(wbf, UDim2.new(0, 56, 0, 28), UDim2.new(1, -35, 0.5, 0), aw)
 
 local wfc = nil
 
 local function swf()
-    if wfc then wfc:Disconnect() wfc = nil end
+    if wfc then wfc:Disconnect(); wfc = nil end
     wfc = rs.Heartbeat:Connect(function()
         if not aw then
-            if wfc then wfc:Disconnect() wfc = nil end
+            if wfc then wfc:Disconnect(); wfc = nil end
             return
         end
         re:FireServer(unpack({{"Add_MS_Request"}}))
@@ -630,157 +723,144 @@ end
 
 local function uwb()
     if aw then
-        wbf.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
-        wbt.TextColor3 = Color3.fromRGB(255, 255, 255)
-        wbt.Text = "Stop Auto Weight"
+        pt(wbf, ti.f, {BackgroundColor3 = Color3.fromRGB(40, 55, 50)})
+        wbl.TextColor3 = Color3.fromRGB(255, 255, 255)
         wit.Text = "Auto Weight active \226\128\148 farming MS and JF automatically"
         ebw()
         swf()
     else
-        wbf.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-        wbt.TextColor3 = Color3.fromRGB(200, 200, 210)
-        wbt.Text = "Start Auto Weight"
+        pt(wbf, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)})
+        wbl.TextColor3 = Color3.fromRGB(200, 200, 200)
         wit.Text = "Auto weight system inactive"
-        if wfc then wfc:Disconnect() wfc = nil end
+        if wfc then wfc:Disconnect(); wfc = nil end
     end
 end
 
 wbt.MouseButton1Click:Connect(function()
     aw = not aw
+    stg(wts, aw)
     cfg.AutoWeightActive = aw
     uwb()
     soc()
 end)
 
-wbt.MouseEnter:Connect(function()
-    if not aw then
-        tw:Create(wbf, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
-    end
+wbf.MouseEnter:Connect(function()
+    if not aw then pt(wbf, ti.f, {BackgroundColor3 = Color3.fromRGB(45, 45, 52)}) end
 end)
-
-wbt.MouseLeave:Connect(function()
-    if not aw then
-        tw:Create(wbf, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
-    end
+wbf.MouseLeave:Connect(function()
+    if not aw then pt(wbf, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)}) end
 end)
 
 local pc = tcs["Position Man"]
 
 local pib = Instance.new("Frame")
 pib.Size = UDim2.new(1, 0, 0, 70)
-pib.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+pib.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 pib.BorderSizePixel = 0
 pib.Parent = pc
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 10); q.Parent = pib end
+do local q = Instance.new("UIStroke"); q.Color = Color3.fromRGB(50, 50, 60); q.Parent = pib end
 
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = pib end
-
-local pt = Instance.new("TextLabel")
-pt.Size = UDim2.new(1, -20, 1, -20)
-pt.Position = UDim2.new(0, 10, 0, 10)
-pt.BackgroundTransparency = 1
-pt.Text = "No position saved"
-pt.TextColor3 = Color3.fromRGB(200, 200, 210)
-pt.Font = Enum.Font.Gotham
-pt.TextSize = 14
-pt.TextWrapped = true
-pt.TextXAlignment = Enum.TextXAlignment.Left
-pt.TextYAlignment = Enum.TextYAlignment.Top
-pt.Parent = pib
+local px = Instance.new("TextLabel")
+px.Size = UDim2.new(1, -20, 1, -20)
+px.Position = UDim2.new(0, 10, 0, 10)
+px.BackgroundTransparency = 1
+px.Text = "No position saved"
+px.TextColor3 = Color3.fromRGB(200, 200, 200)
+px.Font = Enum.Font.Gotham
+px.TextSize = 14
+px.TextWrapped = true
+px.TextXAlignment = Enum.TextXAlignment.Left
+px.TextYAlignment = Enum.TextYAlignment.Top
+px.Parent = pib
 
 local s1 = Instance.new("Frame")
 s1.Size = UDim2.new(1, 0, 0, 55)
-s1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+s1.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
 s1.BorderSizePixel = 0
 s1.Parent = pc
-
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = s1 end
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 10); q.Parent = s1 end
 
 local s2 = Instance.new("TextButton")
 s2.Size = UDim2.new(1, 0, 1, 0)
 s2.BackgroundTransparency = 1
 s2.Text = "Save Current Position"
-s2.TextColor3 = Color3.fromRGB(200, 200, 210)
-s2.Font = Enum.Font.GothamSemibold
-s2.TextSize = 16
+s2.TextColor3 = Color3.fromRGB(200, 200, 200)
+s2.Font = Enum.Font.GothamBold
+s2.TextSize = 14
 s2.AutoButtonColor = false
 s2.Parent = s1
+
+ba(s2,
+    {BackgroundColor3 = Color3.fromRGB(35, 35, 42), Size = UDim2.new(1, 0, 0, 55)},
+    {BackgroundColor3 = Color3.fromRGB(45, 45, 52), Size = UDim2.new(1, 0, 0, 58)},
+    {BackgroundColor3 = Color3.fromRGB(55, 55, 62), Size = UDim2.new(1, 0, 0, 51)}
+)
 
 s2.MouseButton1Click:Connect(function()
     if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
         sv = p.Character.HumanoidRootPart.CFrame
-        s1.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        pt(s1, ti.f, {BackgroundColor3 = Color3.fromRGB(50, 220, 100)})
         s2.TextColor3 = Color3.fromRGB(255, 255, 255)
-        pt.Text = "Position saved! You will respawn here and be pulled back if you go too far."
+        px.Text = "Position saved! You will respawn here and be pulled back if you go too far."
         task.wait(0.5)
-        s1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-        s2.TextColor3 = Color3.fromRGB(200, 200, 210)
+        pt(s1, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)})
+        s2.TextColor3 = Color3.fromRGB(200, 200, 200)
         soc()
     end
 end)
 
-s2.MouseEnter:Connect(function()
-    tw:Create(s1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
-end)
-
-s2.MouseLeave:Connect(function()
-    tw:Create(s1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
-end)
-
 local c1 = Instance.new("Frame")
 c1.Size = UDim2.new(1, 0, 0, 55)
-c1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+c1.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
 c1.BorderSizePixel = 0
 c1.Parent = pc
-
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = c1 end
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 10); q.Parent = c1 end
 
 local c2 = Instance.new("TextButton")
 c2.Size = UDim2.new(1, 0, 1, 0)
 c2.BackgroundTransparency = 1
 c2.Text = "Clear Saved Position"
-c2.TextColor3 = Color3.fromRGB(200, 200, 210)
-c2.Font = Enum.Font.GothamSemibold
-c2.TextSize = 16
+c2.TextColor3 = Color3.fromRGB(200, 200, 200)
+c2.Font = Enum.Font.GothamBold
+c2.TextSize = 14
 c2.AutoButtonColor = false
 c2.Parent = c1
 
+ba(c2,
+    {BackgroundColor3 = Color3.fromRGB(35, 35, 42), Size = UDim2.new(1, 0, 0, 55)},
+    {BackgroundColor3 = Color3.fromRGB(45, 45, 52), Size = UDim2.new(1, 0, 0, 58)},
+    {BackgroundColor3 = Color3.fromRGB(55, 55, 62), Size = UDim2.new(1, 0, 0, 51)}
+)
+
 c2.MouseButton1Click:Connect(function()
     sv = nil
-    c1.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+    pt(c1, ti.f, {BackgroundColor3 = Color3.fromRGB(220, 50, 50)})
     c2.TextColor3 = Color3.fromRGB(255, 255, 255)
-    pt.Text = "Position cleared!"
+    px.Text = "Position cleared!"
     task.wait(0.5)
-    c1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    c2.TextColor3 = Color3.fromRGB(200, 200, 210)
-    pt.Text = "No position saved"
+    pt(c1, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)})
+    c2.TextColor3 = Color3.fromRGB(200, 200, 200)
+    px.Text = "No position saved"
     soc()
-end)
-
-c2.MouseEnter:Connect(function()
-    tw:Create(c1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
-end)
-
-c2.MouseLeave:Connect(function()
-    tw:Create(c1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
 end)
 
 local cc = tcs["Configs"]
 
 local kf = Instance.new("Frame")
 kf.Size = UDim2.new(1, 0, 0, 90)
-kf.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+kf.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
 kf.BorderSizePixel = 0
 kf.Parent = cc
-
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = kf end
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 10); q.Parent = kf end
 
 local kl = Instance.new("TextLabel")
 kl.Size = UDim2.new(1, -20, 0, 35)
 kl.Position = UDim2.new(0, 10, 0, 10)
 kl.BackgroundTransparency = 1
 kl.Text = "Toggle Keybind"
-kl.TextColor3 = Color3.fromRGB(200, 200, 210)
-kl.Font = Enum.Font.GothamSemibold
+kl.TextColor3 = Color3.fromRGB(200, 200, 200)
+kl.Font = Enum.Font.GothamBold
 kl.TextSize = 16
 kl.TextXAlignment = Enum.TextXAlignment.Left
 kl.Parent = kf
@@ -788,7 +868,7 @@ kl.Parent = kf
 local kb = Instance.new("TextButton")
 kb.Size = UDim2.new(0, 100, 0, 40)
 kb.Position = UDim2.new(0, 10, 0, 45)
-kb.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+kb.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
 kb.BorderSizePixel = 0
 kb.Text = "G"
 kb.TextColor3 = Color3.fromRGB(100, 200, 255)
@@ -796,8 +876,13 @@ kb.Font = Enum.Font.GothamBold
 kb.TextSize = 18
 kb.AutoButtonColor = false
 kb.Parent = kf
+do local q = Instance.new("UICorner"); q.CornerRadius = UDim.new(0, 8); q.Parent = kb end
 
-do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 8) w.Parent = kb end
+ba(kb,
+    {BackgroundColor3 = Color3.fromRGB(45, 45, 52), Size = UDim2.new(0, 100, 0, 40)},
+    {BackgroundColor3 = Color3.fromRGB(60, 60, 70), Size = UDim2.new(0, 105, 0, 44)},
+    {BackgroundColor3 = Color3.fromRGB(80, 80, 90), Size = UDim2.new(0, 95, 0, 36)}
+)
 
 local wk = false
 
@@ -818,28 +903,22 @@ kb.MouseButton1Click:Connect(function()
     end)
 end)
 
-kb.MouseEnter:Connect(function()
-    tw:Create(kb, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 55)}):Play()
-end)
-
-kb.MouseLeave:Connect(function()
-    tw:Create(kb, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
-end)
-
 local function alc()
     if kb and cfg.Keybind then
         kb.Text = cfg.Keybind.Name
     end
     if cfg.AutoWeightActive ~= nil then
         aw = cfg.AutoWeightActive
+        stg(wts, aw)
         uwb()
     end
     if cfg.SelectedTraining then
         st = cfg.SelectedTraining
         for w, w2 in pairs(fb) do
             if w == st then
-                w2.f.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
-                w2.b.TextColor3 = Color3.fromRGB(255, 255, 255)
+                stg(w2.tg, true)
+                pt(w2.f, ti.f, {BackgroundColor3 = Color3.fromRGB(40, 55, 50)})
+                w2.l.TextColor3 = Color3.fromRGB(255, 255, 255)
                 local w3 = gcs(w)
                 local w4 = fba(w, w3)
                 if w4 then
@@ -854,8 +933,9 @@ local function alc()
                     end
                 end
             else
-                w2.f.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-                w2.b.TextColor3 = Color3.fromRGB(200, 200, 210)
+                stg(w2.tg, false)
+                pt(w2.f, ti.f, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)})
+                w2.l.TextColor3 = Color3.fromRGB(200, 200, 200)
             end
         end
         if not cfg.TrainingEnabled then
@@ -874,54 +954,38 @@ if ld then
     alc()
 end
 
-local vo = false
-local ut = false
+local io = false
+local ix = false
 
 local function tu()
-    if ut then return end
-    ut = true
-    vo = not vo
-    if vo then
+    if ix then return end
+    ix = true
+    io = not io
+    if io then
         mf.Size = UDim2.new(0, 0, 0, 0)
         mf.Visible = true
-        tw:Create(mf, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-            {Size = UDim2.new(0, 600, 0, 480)}):Play()
-        task.wait(0.3)
-        ut = false
+        pt(mf, ti.b, {Size = UDim2.new(0, 600, 0, 480)})
+        task.wait(0.5)
+        ix = false
     else
-        tw:Create(mf, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-            {Size = UDim2.new(0, 0, 0, 0)}):Play()
-        task.wait(0.2)
+        pt(mf, ti.bi, {Size = UDim2.new(0, 0, 0, 0)})
+        task.wait(0.35)
         mf.Visible = false
-        ut = false
+        ix = false
     end
 end
 
 tgb.MouseButton1Click:Connect(function()
-    if not ut then tu() end
+    if not ix then tu() end
 end)
 
 cb.MouseButton1Click:Connect(function()
-    if not ut and vo then tu() end
-end)
-
-tgb.MouseEnter:Connect(function()
-    if not ut then
-        tw:Create(tgb, TweenInfo.new(0.2), {Size = UDim2.new(0, 90, 0, 90)}):Play()
-        tw:Create(tgl, TweenInfo.new(0.2), {TextSize = 22}):Play()
-    end
-end)
-
-tgb.MouseLeave:Connect(function()
-    if not ut then
-        tw:Create(tgb, TweenInfo.new(0.2), {Size = UDim2.new(0, 80, 0, 80)}):Play()
-        tw:Create(tgl, TweenInfo.new(0.2), {TextSize = 20}):Play()
-    end
+    if not ix and io then tu() end
 end)
 
 ui.InputBegan:Connect(function(w, gp)
     if gp then return end
-    if w.KeyCode == cfg.Keybind and not ut then tu() end
+    if w.KeyCode == cfg.Keybind and not ix then tu() end
 end)
 
 rs.Heartbeat:Connect(function()
