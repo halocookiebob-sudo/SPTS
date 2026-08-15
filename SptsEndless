@@ -1,225 +1,264 @@
-local md = 15
-local pl,rs,ui,tw,hs = game:GetService("Players"),game:GetService("RunService"),game:GetService("UserInputService"),game:GetService("TweenService"),game:GetService("HttpService")
-local p = pl.LocalPlayer
-local sg = p:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
+local pl,rs,ui,tw,hs=game:GetService("Players"),game:GetService("RunService"),game:GetService("UserInputService"),game:GetService("TweenService"),game:GetService("HttpService")
+local p=pl.LocalPlayer
+local sg=p:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
 
 local og=sg:FindFirstChild("eSPTSUI")
 if og then og:Destroy();task.wait(.1) end
 if _eSPTS then
-        for _,w in pairs(_eSPTS.cn or {}) do pcall(function() w:Disconnect() end) end
-        for _,w in pairs(_eSPTS.tw or {}) do pcall(function() w:Cancel() end) end
-        if _eSPTS.fc then pcall(function() _eSPTS.fc:Disconnect() end) end
+	for _,w in pairs(_eSPTS.cn or {}) do pcall(function() w:Disconnect() end) end
+	for _,w in pairs(_eSPTS.tw or {}) do pcall(function() w:Cancel() end) end
+	for _,w in pairs(_eSPTS.th or {}) do if typeof(w)=="thread" and coroutine.status(w)~="dead" then pcall(task.cancel,w) end end
 end
-_eSPTS={cn={},tw={},fc=nil}
+_eSPTS={cn={},tw={},th={}}
 
-local inf = sg:WaitForChild("MenuFrame"):WaitForChild("InfoFrame")
-local ap = workspace:WaitForChild("Map"):WaitForChild("Training_Collisions")
-local re = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
+local inf=sg:WaitForChild("MenuFrame"):WaitForChild("InfoFrame")
+local ap=workspace:WaitForChild("Map"):WaitForChild("Training_Collisions")
+local re=game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
 
-local ti = {
-        f=TweenInfo.new(.15,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
-        m=TweenInfo.new(.25,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
-        s=TweenInfo.new(.35,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
-        b=TweenInfo.new(.50,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-        bi=TweenInfo.new(.35,Enum.EasingStyle.Back,Enum.EasingDirection.In),
-        e=TweenInfo.new(.60,Enum.EasingStyle.Elastic,Enum.EasingDirection.Out),
-        sm=TweenInfo.new(.30,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
+local cf={kb="G",st=nil,aw=false,as=true,tb="Auto Farm",sv=nil,up=nil}
+local cnf="eSPTS_Config.json"
+
+local function scf()
+	if not writefile then return end
+	local w=cf.sv and {X=cf.sv.X,Y=cf.sv.Y,Z=cf.sv.Z,RX=cf.sv.RX,RY=cf.sv.RY,RZ=cf.sv.RZ,UX=cf.sv.UX,UY=cf.sv.UY,UZ=cf.sv.UZ,BX=cf.sv.BX,BY=cf.sv.BY,BZ=cf.sv.BZ} or nil
+	writefile(cnf,hs:JSONEncode({kb=cf.kb,st=cf.st,aw=cf.aw,as=cf.as,tb=cf.tb,sv=w,up=cf.up}))
+end
+
+local function lcf()
+	if not readfile or not isfile or not isfile(cnf) then return false end
+	local w,w2=pcall(function() return hs:JSONDecode(readfile(cnf)) end)
+	if not w or not w2 then return false end
+	cf.kb=w2.kb or "G";cf.st=w2.st;cf.aw=w2.aw or false
+	cf.as=w2.as~=nil and w2.as or true;cf.tb=w2.tb or "Auto Farm"
+	if w2.sv then
+		local w3=w2.sv
+		cf.sv=CFrame.fromMatrix(
+			Vector3.new(w3.X,w3.Y,w3.Z),
+			Vector3.new(w3.RX,w3.RY,w3.RZ),
+			Vector3.new(w3.UX,w3.UY,w3.UZ),
+			Vector3.new(w3.BX,w3.BY,w3.BZ))
+	end
+	cf.up=w2.up
+	return true
+end
+
+local ti={
+	f=TweenInfo.new(.15,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
+	m=TweenInfo.new(.25,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
+	s=TweenInfo.new(.35,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
+	b=TweenInfo.new(.50,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
+	bi=TweenInfo.new(.35,Enum.EasingStyle.Back,Enum.EasingDirection.In),
+	e=TweenInfo.new(.60,Enum.EasingStyle.Elastic,Enum.EasingDirection.Out),
+	sm=TweenInfo.new(.30,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
 }
-local yt = {}
+local yt={}
 
 local function xt(w)
-        if yt[w] then yt[w]:Cancel();yt[w]=nil end
+	if yt[w] then yt[w]:Cancel();yt[w]=nil end
 end
-
 local function pt(w,w2,w3)
-        xt(w)
-        local w4=tw:Create(w,w2,w3)
-        yt[w]=w4;w4:Play()
-        w4.Completed:Connect(function(w5)
-                if w5==Enum.TweenStatus.Completed then yt[w]=nil end
-        end)
-        return w4
+	xt(w)
+	local w4=tw:Create(w,w2,w3)
+	yt[w]=w4;w4:Play()
+	w4.Completed:Connect(function(w5)
+		if w5==Enum.TweenStatus.Completed then yt[w]=nil end
+	end)
+	return w4
 end
 
 local function cn(w,f)
-        local c=w:Connect(f)
-        _eSPTS.cn[#_eSPTS.cn+1]=c
-        return c
+	local c=w:Connect(f)
+	_eSPTS.cn[#_eSPTS.cn+1]=c
+	return c
+end
+
+local thr={}
+local function klT(n)
+	if thr[n] then
+		local w=thr[n];thr[n]=nil
+		if typeof(w)=="thread" and coroutine.status(w)~="dead" then pcall(task.cancel,w) end
+	end
+end
+
+local db={}
+local function dbn(n,d)
+	if db[n] then return false end
+	db[n]=true;task.delay(d or .3,function() db[n]=false end);return true
 end
 
 local function mt(w,w2,w3,w4)
-        local w5,w6=w2.X.Offset or 56,w2.Y.Offset or 28
-        local w7=w6-6;local w8=3;local w9=w5-w7-3
-        local w10=Instance.new("Frame",w)
-        w10.Size=UDim2.new(0,w5,0,w6);w10.Position=w3
-        w10.AnchorPoint=Vector2.new(.5,.5);w10.BorderSizePixel=0
-        w10.BackgroundColor3=w4 and Color3.fromRGB(50,220,100) or Color3.fromRGB(60,60,70)
-        do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,w6/2);q.Parent=w10 end
-        local w11=Instance.new("Frame",w10)
-        w11.Size=UDim2.new(0,w7,0,w7)
-        w11.Position=UDim2.new(0,w4 and w9 or w8,.5,0)
-        w11.AnchorPoint=Vector2.new(0,.5);w11.BackgroundColor3=Color3.fromRGB(255,255,255);w11.BorderSizePixel=0
-        do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,w7/2);q.Parent=w11 end
-        local w12=Instance.new("TextButton",w10)
-        w12.Size=UDim2.new(1,0,1,0);w12.BackgroundTransparency=1
-        w12.Text="";w12.ZIndex=w10.ZIndex+2
-        local w13={v=w4,t=w10,k=w11,ox=w8,nx=w9}
-        return w12,w13
+	local w5,w6=w2.X.Offset or 56,w2.Y.Offset or 28
+	local w7=w6-6;local w8=3;local w9=w5-w7-3
+	local w10=Instance.new("Frame",w)
+	w10.Size=UDim2.new(0,w5,0,w6);w10.Position=w3
+	w10.AnchorPoint=Vector2.new(.5,.5);w10.BorderSizePixel=0
+	w10.BackgroundColor3=w4 and Color3.fromRGB(50,220,100) or Color3.fromRGB(60,60,70)
+	do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,w6/2);q.Parent=w10 end
+	local w11=Instance.new("Frame",w10)
+	w11.Size=UDim2.new(0,w7,0,w7)
+	w11.Position=UDim2.new(0,w4 and w9 or w8,.5,0)
+	w11.AnchorPoint=Vector2.new(0,.5);w11.BackgroundColor3=Color3.fromRGB(255,255,255);w11.BorderSizePixel=0
+	do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,w7/2);q.Parent=w11 end
+	local w12=Instance.new("TextButton",w10)
+	w12.Size=UDim2.new(1,0,1,0);w12.BackgroundTransparency=1
+	w12.Text="";w12.ZIndex=w10.ZIndex+2
+	local w13={v=w4,t=w10,k=w11,ox=w8,nx=w9}
+	return w12,w13
 end
 
 local function stg(w,w2)
-        if not w then return end
-        w.v=w2
-        pt(w.t,ti.f,{BackgroundColor3=w2 and Color3.fromRGB(50,220,100) or Color3.fromRGB(60,60,70)})
-        pt(w.k,ti.f,{Position=UDim2.new(0,w2 and w.nx or w.ox,.5,0)})
+	if not w then return end
+	w.v=w2
+	pt(w.t,ti.f,{BackgroundColor3=w2 and Color3.fromRGB(50,220,100) or Color3.fromRGB(60,60,70)})
+	pt(w.k,ti.f,{Position=UDim2.new(0,w2 and w.nx or w.ox,.5,0)})
 end
 
 local function ba(w,w2,w3,w4)
-        cn(w.MouseEnter,function() pt(w,ti.f,w3) end)
-        cn(w.MouseLeave,function() pt(w,ti.f,w2) end)
-        cn(w.MouseButton1Down,function() pt(w,ti.f,w4) end)
-        cn(w.MouseButton1Up,function() pt(w,ti.f,w3) end)
+	cn(w.MouseEnter,function() pt(w,ti.f,w3) end)
+	cn(w.MouseLeave,function() pt(w,ti.f,w2) end)
+	cn(w.MouseButton1Down,function() pt(w,ti.f,w4) end)
+	cn(w.MouseButton1Up,function() pt(w,ti.f,w3) end)
 end
 
 local ar={
-        BodyToughness={
-                FireBathTouchPart={req="500",multi="x10"},Water={req="5",multi="x5"},
-                IcePart={req="5K",multi="x20"},LavaPart={req="500K",multi="x100"},
-                TornadoTouchPart={req="50K",multi="x50"},GreenFirePart={req="50M",multi="x2000"},
-                AcidPart={req="5B",multi="x40000"},LavaPart2={req="500B",multi="x800000"},
-                AFK_BT_1={req="7.383T",multi="x6M"},AFK_BT_2={req="655T",multi="x180M"},
-                AFK_BT_3={req="66.6Qa",multi="x5.5B"},AFK_BT_4={req="5.1Qi",multi="x162.5B"},
-                AFK_BT_5={req="460Qi",multi="x5T"},AFK_BT_6={req="40.05Sx",multi="x150T"},
-                AFK_BT_7={req="3.55Sp",multi="x4.5Qa"},AFK_BT_8={req="314Sp",multi="x131.2Qa"},
-                AFK_BT_9={req="27.78Oc",multi="x3.925Qi"},AFK_BT_10={req="2.473No",multi="x118Qi"},
-                AFK_BT_11={req="217.5No",multi="x3.55Sx"},AFK_BT_12={req="19.5Dc",multi="x106.2Sx"},
-                AFK_BT_13={req="1.7Ud",multi="x3.2Sp"},AFK_BT_14={req="155Ud",multi="x95.74Sp"},
-                AFK_BT_15={req="13.56Dd",multi="x2.5Oc"}
-        },
-        FistStrength={
-                TrainingArea_2={req="0",multi="x10"},AFK_FS_1={req="1Qa",multi="x6M"},
-                TrainingArea_3={req="1M",multi="x100"},StarFSTraining1={req="1B",multi="x2000"},
-                StarFSTraining2={req="100B",multi="x40000"},StarFSTraining3={req="10T",multi="x800000"},
-                AFK_FS_2={req="100Qa",multi="x300M"},AFK_FS_3={req="15Qi",multi="x21B"},
-                AFK_FS_4={req="2.5Sx",multi="x2.308T"},AFK_FS_5={req="1Sp",multi="x347.5T"},
-                AFK_FS_6={req="500Sp",multi="x52Qa"},AFK_FS_7={req="250Oc",multi="x7.8Qi"},
-                AFK_FS_8={req="150No",multi="???"},AFK_FS_9={req="55Dc",multi="???"},
-                AFK_FS_10={req="30Ud",multi="???"},AFK_FS_11={req="11Dd",multi="???"}
-        },
-        MovementSpeed={
-                AFK_MS_1={req="100T",multi="x1.3M"},AFK_MS_2={req="2.22Qa",multi="x16.9M"},
-                AFK_MS_3={req="60Qa",multi="x219.7M"},AFK_MS_4={req="1.5Qi",multi="x2.85B"},
-                AFK_MS_5={req="40Qi",multi="x37.2B"},AFK_MS_6={req="1Sx",multi="x482.4B"},
-                AFK_MS_7={req="25Sx",multi="x6.274T"},AFK_MS_8={req="750Sx",multi="x81.5T"},
-                AFK_MS_9={req="15.5Sp",multi="x2.12Qa"},AFK_MS_10={req="400Sp",multi="x13.77Qa"},
-                AFK_MS_11={req="10Oc",multi="x179.2Qa"}
-        },
-        PsychicPower={
-                PPTrainingPart1={req="1M",multi="x100"},PPTrainingPart2={req="1B",multi="x10k"},
-                PPTrainingPart3={req="1T",multi="x1M"},PPTrainingPart4={req="1Qa",multi="x100M"},
-                AFK_PP_1={req="333Qa",multi="x2.5B"},AFK_PP_2={req="111Qi",multi="x250B"},
-                AFK_PP_3={req="33.3Sx",multi="x25T"},AFK_PP_4={req="11.1Sp",multi="x2.5Qa"},
-                AFK_PP_5={req="3.36Oc",multi="x250Qa"},AFK_PP_6={req="1.11No",multi="x25Qi"},
-                AFK_PP_7={req="444No",multi="x2.5Sx"},AFK_PP_8={req="111Dc",multi="???"},
-                AFK_PP_9={req="55.5Ud",multi="???"},AFK_PP_10={req="22.2Dd",multi="???"}
-        },
-        JumpForce={
-                AFK_JF_1={req="100T",multi="x1.7M"},AFK_JF_2={req="5Qa",multi="x30.5M"},
-                AFK_JF_3={req="150Qa",multi="x550M"},AFK_JF_4={req="5Qi",multi="x9.92B"},
-                AFK_JF_5={req="200Qi",multi="???"},AFK_JF_6={req="10Sx",multi="???"},
-                AFK_JF_7={req="300Sx",multi="???"},AFK_JF_8={req="15Sp",multi="???"},
-                AFK_JF_9={req="400Sp",multi="???"}
-        }
+	BodyToughness={
+		FireBathTouchPart={req="500",multi="x10"},Water={req="5",multi="x5"},
+		IcePart={req="5K",multi="x20"},LavaPart={req="500K",multi="x100"},
+		TornadoTouchPart={req="50K",multi="x50"},GreenFirePart={req="50M",multi="x2000"},
+		AcidPart={req="5B",multi="x40000"},LavaPart2={req="500B",multi="x800000"},
+		AFK_BT_1={req="7.383T",multi="x6M"},AFK_BT_2={req="655T",multi="x180M"},
+		AFK_BT_3={req="66.6Qa",multi="x5.5B"},AFK_BT_4={req="5.1Qi",multi="x162.5B"},
+		AFK_BT_5={req="460Qi",multi="x5T"},AFK_BT_6={req="40.05Sx",multi="x150T"},
+		AFK_BT_7={req="3.55Sp",multi="x4.5Qa"},AFK_BT_8={req="314Sp",multi="x131.2Qa"},
+		AFK_BT_9={req="27.78Oc",multi="x3.925Qi"},AFK_BT_10={req="2.473No",multi="x118Qi"},
+		AFK_BT_11={req="217.5No",multi="x3.55Sx"},AFK_BT_12={req="19.5Dc",multi="x106.2Sx"},
+		AFK_BT_13={req="1.7Ud",multi="x3.2Sp"},AFK_BT_14={req="155Ud",multi="x95.74Sp"},
+		AFK_BT_15={req="13.56Dd",multi="x2.5Oc"}
+	},
+	FistStrength={
+		TrainingArea_2={req="0",multi="x10"},AFK_FS_1={req="1Qa",multi="x6M"},
+		TrainingArea_3={req="1M",multi="x100"},StarFSTraining1={req="1B",multi="x2000"},
+		StarFSTraining2={req="100B",multi="x40000"},StarFSTraining3={req="10T",multi="x800000"},
+		AFK_FS_2={req="100Qa",multi="x300M"},AFK_FS_3={req="15Qi",multi="x21B"},
+		AFK_FS_4={req="2.5Sx",multi="x2.308T"},AFK_FS_5={req="1Sp",multi="x347.5T"},
+		AFK_FS_6={req="500Sp",multi="x52Qa"},AFK_FS_7={req="250Oc",multi="x7.8Qi"},
+		AFK_FS_8={req="150No",multi="??"},AFK_FS_9={req="55Dc",multi="??"},
+		AFK_FS_10={req="30Ud",multi="??"},AFK_FS_11={req="11Dd",multi="??"}
+	},
+	MovementSpeed={
+		AFK_MS_1={req="100T",multi="x1.3M"},AFK_MS_2={req="2.22Qa",multi="x16.9M"},
+		AFK_MS_3={req="60Qa",multi="x219.7M"},AFK_MS_4={req="1.5Qi",multi="x2.85B"},
+		AFK_MS_5={req="40Qi",multi="x37.2B"},AFK_MS_6={req="1Sx",multi="x482.4B"},
+		AFK_MS_7={req="25Sx",multi="x6.274T"},AFK_MS_8={req="750Sx",multi="x81.5T"},
+		AFK_MS_9={req="15.5Sp",multi="x2.12Qa"},AFK_MS_10={req="400Sp",multi="x13.77Qa"},
+		AFK_MS_11={req="10Oc",multi="x179.2Qa"}
+	},
+	PsychicPower={
+		PPTrainingPart1={req="1M",multi="x100"},PPTrainingPart2={req="1B",multi="x10k"},
+		PPTrainingPart3={req="1T",multi="x1M"},PPTrainingPart4={req="1Qa",multi="x100M"},
+		AFK_PP_1={req="333Qa",multi="x2.5B"},AFK_PP_2={req="111Qi",multi="x250B"},
+		AFK_PP_3={req="33.3Sx",multi="x25T"},AFK_PP_4={req="11.1Sp",multi="x2.5Qa"},
+		AFK_PP_5={req="3.36Oc",multi="x250Qa"},AFK_PP_6={req="1.11No",multi="x25Qi"},
+		AFK_PP_7={req="444No",multi="x2.5Sx"},AFK_PP_8={req="111Dc",multi="??"},
+		AFK_PP_9={req="55.5Ud",multi="??"},AFK_PP_10={req="22.2Dd",multi="??"}
+	},
+	JumpForce={
+		AFK_JF_1={req="100T",multi="x1.7M"},AFK_JF_2={req="5Qa",multi="x30.5M"},
+		AFK_JF_3={req="150Qa",multi="x550M"},AFK_JF_4={req="5Qi",multi="x9.92B"},
+		AFK_JF_5={req="200Qi",multi="??"},AFK_JF_6={req="10Sx",multi="??"},
+		AFK_JF_7={req="300Sx",multi="??"},AFK_JF_8={req="15Sp",multi="??"},
+		AFK_JF_9={req="400Sp",multi="??"}
+	}
 }
 
 local wl={
-        {n="100 LB",m=100,j=5000},{n="1 TON",m=5000,j=200000},
-        {n="10 TON",m=500000,j=2000000},{n="100 TON",m=10000000,j=10000000},
-        {n="1 K TON",m=100000000,j=200000000},{n="10 K TON",m=1000000000,j=1000000000},
-        {n="100 K TON",m=10000000000,j=10000000000},{n="1 M TON",m=100000000000,j=100000000000},
-        {n="10 M TON",m=1e12,j=1e12},{n="1 B TON",m=1e13,j=1e13},
-        {n="100 B TON",m=2.56e28,j=1.54e28},{n="10 T TON",m=0,j=6e26},
-        {n="1 Qa TON",m=1.68e32,j=2.221e31},{n="100 Qa TON",m=4.288e33,j=8.48e31},
-        {n="10 Qi TON",m=1.082e34,j=3.226e33},{n="1 Sx TON",m=2.823e36,j=1.229e36},
-        {n="100 Sx TON",m=7.02e37,j=4.683e37},{n="10 Sp TON",m=1.852e39,j=1.785e39},
-        {n="10 Oc TON",m=4.744e39,j=6.8e39}
+	{n="100 LB",m=100,j=5000},{n="1 TON",m=5000,j=200000},
+	{n="10 TON",m=500000,j=2000000},{n="100 TON",m=10000000,j=10000000},
+	{n="1 K TON",m=100000000,j=200000000},{n="10 K TON",m=1000000000,j=1000000000},
+	{n="100 K TON",m=10000000000,j=10000000000},{n="1 M TON",m=100000000000,j=100000000000},
+	{n="10 M TON",m=1e12,j=1e12},{n="1 B TON",m=1e13,j=1e13},
+	{n="100 B TON",m=2.56e28,j=1.54e28},{n="10 T TON",m=0,j=6e26},
+	{n="1 Qa TON",m=1.68e32,j=2.221e31},{n="100 Qa TON",m=4.288e33,j=8.48e31},
+	{n="10 Qi TON",m=1.082e34,j=3.226e33},{n="1 Sx TON",m=2.823e36,j=1.229e36},
+	{n="100 Sx TON",m=7.02e37,j=4.683e37},{n="10 Sp TON",m=1.852e39,j=1.785e39},
+	{n="10 Oc TON",m=4.744e39,j=6.8e39}
 }
 
 local uo={
-        {"K",1e3},{"M",1e6},{"B",1e9},{"T",1e12},{"Qa",1e15},{"Qi",1e18},
-        {"Sx",1e21},{"Sp",1e24},{"Oc",1e27},{"No",1e30},{"Dc",1e33},
-        {"Ud",1e36},{"Dd",1e39}
+	{"K",1e3},{"M",1e6},{"B",1e9},{"T",1e12},{"Qa",1e15},{"Qi",1e18},
+	{"Sx",1e21},{"Sp",1e24},{"Oc",1e27},{"No",1e30},{"Dc",1e33},
+	{"Ud",1e36},{"Dd",1e39}
 }
 
 local function ctn(s)
-        if not s then return 0 end
-        local w=tostring(s):gsub("%s+","")
-        local w1,w2=w:match("([%d%.]+)(%a*)$")
-        local w3=tonumber(w1) or 0
-        if w2=="" then return w3 end
-        for _,w4 in ipairs(uo) do if w4[1]==w2 then return w3*w4[2] end end
-        return w3
+	if not s then return 0 end
+	local w=tostring(s):gsub("%s+","")
+	local w1,w2=w:match("([%d%.]+)(%a*)$")
+	local w3=tonumber(w1) or 0
+	if w2=="" then return w3 end
+	for _,w4 in ipairs(uo) do if w4[1]==w2 then return w3*w4[2] end end
+	return w3
 end
 
 local sp={
-        FistStrength=inf:WaitForChild("FSTxt"),
-        BodyToughness=inf:WaitForChild("BTTxt"),
-        PsychicPower=inf:WaitForChild("PPTxt"),
-        JumpForce=inf:WaitForChild("JFTxt"),
-        MovementSpeed=inf:WaitForChild("MSTxt")
+	FistStrength=inf:WaitForChild("FSTxt"),
+	BodyToughness=inf:WaitForChild("BTTxt"),
+	PsychicPower=inf:WaitForChild("PPTxt"),
+	JumpForce=inf:WaitForChild("JFTxt"),
+	MovementSpeed=inf:WaitForChild("MSTxt")
 }
 
 local function gcs(w)
-        local w1=sp[w]
-        if not w1 then return 0 end
-        return ctn(w1.Text)
+	local w1=sp[w]
+	if not w1 then return 0 end
+	return ctn(w1.Text)
 end
 
 local function fba(w,w2)
-        local w3=ar[w]
-        if not w3 then return nil end
-        local w4,w5=nil,-1
-        for w6,w7 in pairs(w3) do
-                local w8=ctn(w7.req)
-                if w2>=w8 and w8>w5 then w4=w6;w5=w8 end
-        end
-        return w4,w5
+	local w3=ar[w]
+	if not w3 then return nil end
+	local w4,w5=nil,-1
+	for w6,w7 in pairs(w3) do
+		local w8=ctn(w7.req)
+		if w2>=w8 and w8>w5 then w4=w6;w5=w8 end
+	end
+	return w4,w5
 end
 
 local function gao(w,w2)
-        local w3=ap:FindFirstChild(w)
-        if not w3 then return nil end
-        return w3:FindFirstChild(w2)
+	local w3=ap:FindFirstChild(w)
+	if not w3 then return nil end
+	return w3:FindFirstChild(w2)
 end
 
 local function tta(w)
-        if not w then return false end
-        local w1=p.Character
-        if not w1 then return false end
-        local w2=w1:FindFirstChild("HumanoidRootPart")
-        if not w2 then return false end
-        local w3
-        if w:IsA("BasePart") then w3=w.CFrame
-        else
-                local w4=w.PrimaryPart or w:FindFirstChildWhichIsA("BasePart")
-                if w4 then w3=w4.CFrame end
-        end
-        if w3 then
-                w2.CFrame=w3+Vector3.new(0,5,0)
-                return true,w3+Vector3.new(0,5,0)
-        end
-        return false
+	if not w then return false end
+	local w1=p.Character
+	if not w1 then return false end
+	local w2=w1:FindFirstChild("HumanoidRootPart")
+	if not w2 then return false end
+	local w3
+	if w:IsA("BasePart") then w3=w.CFrame
+	else
+		local w4=w.PrimaryPart or w:FindFirstChildWhichIsA("BasePart")
+		if w4 then w3=w4.CFrame end
+	end
+	if w3 then
+		w2.CFrame=w3+Vector3.new(0,5,0)
+		return true,w3+Vector3.new(0,5,0)
+	end
+	return false
 end
 
 local function ebw()
-        local w=gcs("MovementSpeed")
-        local w1=gcs("JumpForce")
-        local w2,w3=nil,1
-        for w4,w5 in ipairs(wl) do
-                if w>=w5.m and w1>=w5.j then w2=w5;w3=w4
-                else break end
-        end
-        if w2 then re:FireServer(unpack({{"EquipWeight_Request",w3}})) end
+	local w=gcs("MovementSpeed")
+	local w1=gcs("JumpForce")
+	local w2,w3=nil,1
+	for w4,w5 in ipairs(wl) do
+		if w>=w5.m and w1>=w5.j then w2=w5;w3=w4
+		else break end
+	end
+	if w2 then re:FireServer(unpack({{"EquipWeight_Request",w3}})) end
 end
 
 local mg=Instance.new("ScreenGui")
@@ -246,17 +285,17 @@ local mf=Instance.new("Frame")
 mf.Name="MainFrame";mf.Size=UDim2.new(0,600,0,480)
 mf.Position=UDim2.new(.5,0,.5,0);mf.AnchorPoint=Vector2.new(.5,.5)
 mf.BackgroundColor3=Color3.fromRGB(25,25,30);mf.BorderSizePixel=0
-mf.Visible=false;mf.Parent=mg
+mf.Visible=false;mf.Active=true;mf.Parent=mg
 do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,16);q.Parent=mf end
 
 local tp=Instance.new("Frame")
 tp.Name="TopBar";tp.Size=UDim2.new(1,0,0,50)
 tp.BackgroundColor3=Color3.fromRGB(35,35,42);tp.BorderSizePixel=0;tp.Parent=mf
 do
-        local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,16);q.Parent=tp
-        local q2=Instance.new("Frame")
-        q2.Size=UDim2.new(1,0,0,16);q2.Position=UDim2.new(0,0,1,-16)
-        q2.BackgroundColor3=Color3.fromRGB(35,35,42);q2.BorderSizePixel=0;q2.Parent=tp
+	local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,16);q.Parent=tp
+	local q2=Instance.new("Frame")
+	q2.Size=UDim2.new(1,0,0,16);q2.Position=UDim2.new(0,0,1,-16)
+	q2.BackgroundColor3=Color3.fromRGB(35,35,42);q2.BorderSizePixel=0;q2.Parent=tp
 end
 
 local tpl=Instance.new("TextLabel")
@@ -276,83 +315,86 @@ cb2.Text="X";cb2.TextColor3=Color3.fromRGB(255,255,255)
 cb2.Font=Enum.Font.GothamBold;cb2.TextSize=16;cb2.Parent=cb
 
 ba(cb,
-        {BackgroundColor3=Color3.fromRGB(220,50,50),Size=UDim2.new(0,28,0,28)},
-        {BackgroundColor3=Color3.fromRGB(240,70,70),Size=UDim2.new(0,31,0,31)},
-        {BackgroundColor3=Color3.fromRGB(180,30,30),Size=UDim2.new(0,25,0,25)}
+	{BackgroundColor3=Color3.fromRGB(220,50,50),Size=UDim2.new(0,28,0,28)},
+	{BackgroundColor3=Color3.fromRGB(240,70,70),Size=UDim2.new(0,31,0,31)},
+	{BackgroundColor3=Color3.fromRGB(180,30,30),Size=UDim2.new(0,25,0,25)}
 )
 
 local tcg=Instance.new("Frame")
 tcg.Name="TabContainer";tcg.Size=UDim2.new(1,-40,0,40)
 tcg.Position=UDim2.new(0,20,0,60);tcg.BackgroundTransparency=1;tcg.Parent=mf
 do
-        local q=Instance.new("UIListLayout")
-        q.FillDirection=Enum.FillDirection.Horizontal;q.Padding=UDim.new(0,10)
-        q.HorizontalAlignment=Enum.HorizontalAlignment.Center;q.Parent=tcg
+	local q=Instance.new("UIListLayout")
+	q.FillDirection=Enum.FillDirection.Horizontal;q.Padding=UDim.new(0,10)
+	q.HorizontalAlignment=Enum.HorizontalAlignment.Center;q.Parent=tcg
 end
 
-local cf=Instance.new("Frame")
-cf.Name="ContentFrame";cf.Size=UDim2.new(1,-40,1,-140)
-cf.Position=UDim2.new(0,20,0,120);cf.BackgroundTransparency=1;cf.Parent=mf
+local cf2=Instance.new("Frame")
+cf2.Name="ContentFrame";cf2.Size=UDim2.new(1,-40,1,-140)
+cf2.Position=UDim2.new(0,20,0,120);cf2.BackgroundTransparency=1;cf2.Parent=mf
 
 local tbs={"Auto Farm","Auto Weights","Position Man","Configs"}
 local tbn,tcs={},{}
 
 for w,w2 in ipairs(tbs) do
-        local w3=Instance.new("TextButton")
-        w3.Size=UDim2.new(0,130,0,36);w3.BackgroundColor3=Color3.fromRGB(35,35,42)
-        w3.BorderSizePixel=0;w3.Text=w2;w3.TextColor3=Color3.fromRGB(180,180,180)
-        w3.Font=Enum.Font.GothamBold;w3.TextSize=13;w3.AutoButtonColor=false;w3.Parent=tcg
-        do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,8);q.Parent=w3 end
-        tbn[w2]=w3
-        local w5=Instance.new("ScrollingFrame")
-        w5.Size=UDim2.new(1,0,1,0);w5.BackgroundTransparency=1;w5.BorderSizePixel=0
-        w5.ScrollBarThickness=4;w5.ScrollBarImageColor3=Color3.fromRGB(100,150,255)
-        w5.ScrollBarImageTransparency=0.5;w5.Visible=(w==1)
-        w5.CanvasSize=UDim2.new(0,0,0,0);w5.AutomaticCanvasSize=Enum.AutomaticSize.Y;w5.Parent=cf
-        do
-                local q=Instance.new("UIListLayout")
-                q.Padding=UDim.new(0,10);q.SortOrder=Enum.SortOrder.LayoutOrder;q.Parent=w5
-        end
-        tcs[w2]=w5
+	local w3=Instance.new("TextButton")
+	w3.Size=UDim2.new(0,130,0,36);w3.BackgroundColor3=Color3.fromRGB(35,35,42)
+	w3.BorderSizePixel=0;w3.Text=w2;w3.TextColor3=Color3.fromRGB(180,180,180)
+	w3.Font=Enum.Font.GothamBold;w3.TextSize=13;w3.AutoButtonColor=false;w3.Parent=tcg
+do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,8);q.Parent=w3 end
+	tbn[w2]=w3
+	local w5=Instance.new("ScrollingFrame")
+	w5.Size=UDim2.new(1,0,1,0);w5.BackgroundTransparency=1;w5.BorderSizePixel=0
+	w5.ScrollBarThickness=4;w5.ScrollBarImageColor3=Color3.fromRGB(100,150,255)
+	w5.ScrollBarImageTransparency=0.5;w5.Visible=(w==1)
+	w5.CanvasSize=UDim2.new(0,0,0,0);w5.AutomaticCanvasSize=Enum.AutomaticSize.Y;w5.Parent=cf2
+	do
+		local q=Instance.new("UIListLayout")
+		q.Padding=UDim.new(0,10);q.SortOrder=Enum.SortOrder.LayoutOrder;q.Parent=w5
+	end
+	tcs[w2]=w5
 end
 
-local sv=nil
-local st=nil
 local ao=nil
 local ac=nil
-local aw=false
-local wfc=nil
+
+local dp={
+	FistStrength="Fist Strength",BodyToughness="Body Toughness",
+	PsychicPower="Psychic Power",JumpForce="Jump Force",MovementSpeed="Movement Speed"
+}
+
+local cg={"FistStrength","BodyToughness","PsychicPower","JumpForce","MovementSpeed"}
+local fb={}
 
 local function sw(w)
-        for w2,w3 in pairs(tbn) do
-                if w2==w then
-                        pt(w3,ti.f,{BackgroundColor3=Color3.fromRGB(100,150,255),TextColor3=Color3.fromRGB(255,255,255),Size=UDim2.new(0,134,0,40)})
-                else
-                        pt(w3,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42),TextColor3=Color3.fromRGB(180,180,180),Size=UDim2.new(0,130,0,36)})
-                end
-        end
-        for w2,w3 in pairs(tcs) do w3.Visible=(w2==w) end
+	for w2,w3 in pairs(tbn) do
+		if w2==w then
+			pt(w3,ti.f,{BackgroundColor3=Color3.fromRGB(100,150,255),TextColor3=Color3.fromRGB(255,255,255),Size=UDim2.new(0,134,0,40)})
+		else
+			pt(w3,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42),TextColor3=Color3.fromRGB(180,180,180),Size=UDim2.new(0,130,0,36)})
+		end
+	end
+	for w2,w3 in pairs(tcs) do w3.Visible=(w2==w) end
+	cf.tb=w;scf()
 end
 
 for w2,w3 in pairs(tbn) do
-        cn(w3.MouseButton1Click,function() sw(w2) end)
-        cn(w3.MouseEnter,function()
-                if w3.BackgroundColor3~=Color3.fromRGB(100,150,255) then
-                        pt(w3,ti.f,{BackgroundColor3=Color3.fromRGB(45,45,52),Size=UDim2.new(0,134,0,40),TextColor3=Color3.fromRGB(220,220,220)})
-                end
-        end)
-        cn(w3.MouseLeave,function()
-                if w3.BackgroundColor3~=Color3.fromRGB(100,150,255) then
-                        pt(w3,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42),Size=UDim2.new(0,130,0,36),TextColor3=Color3.fromRGB(180,180,180)})
-                else
-                        pt(w3,ti.f,{Size=UDim2.new(0,134,0,40)})
-                end
-        end)
-        cn(w3.MouseButton1Down,function() pt(w3,ti.f,{Size=UDim2.new(0,126,0,32)}) end)
-        cn(w3.MouseButton1Up,function() pt(w3,ti.f,{Size=UDim2.new(0,134,0,40)}) end)
+	cn(w3.MouseButton1Click,function() sw(w2) end)
+	cn(w3.MouseEnter,function()
+		if w3.BackgroundColor3~=Color3.fromRGB(100,150,255) then
+			pt(w3,ti.f,{BackgroundColor3=Color3.fromRGB(45,45,52),Size=UDim2.new(0,134,0,40),TextColor3=Color3.fromRGB(220,220,220)})
+		end
+	end)
+	cn(w3.MouseLeave,function()
+		if w3.BackgroundColor3~=Color3.fromRGB(100,150,255) then
+			pt(w3,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42),Size=UDim2.new(0,130,0,36),TextColor3=Color3.fromRGB(180,180,180)})
+		else
+			pt(w3,ti.f,{Size=UDim2.new(0,134,0,40)})
+		end
+	end)
+	cn(w3.MouseButton1Down,function() pt(w3,ti.f,{Size=UDim2.new(0,126,0,32)}) end)
+	cn(w3.MouseButton1Up,function() pt(w3,ti.f,{Size=UDim2.new(0,134,0,40)}) end)
 end
-
-sw("Auto Farm")
 
 local fc=tcs["Auto Farm"]
 
@@ -369,130 +411,66 @@ it.TextColor3=Color3.fromRGB(200,200,200);it.Font=Enum.Font.Gotham;it.TextSize=1
 it.TextWrapped=true;it.TextXAlignment=Enum.TextXAlignment.Left
 it.TextYAlignment=Enum.TextYAlignment.Top;it.Parent=ib
 
-local dp={
-        FistStrength="Fist Strength",BodyToughness="Body Toughness",
-        PsychicPower="Psychic Power",JumpForce="Jump Force",MovementSpeed="Movement Speed"
-}
-
-local cg={"FistStrength","BodyToughness","PsychicPower","JumpForce","MovementSpeed"}
-local fb={}
-
-local cfg={
-        Keybind=Enum.KeyCode.G,SelectedTraining=nil,AutoWeightActive=false,
-        AutoSaveEnabled=true,SavedPosition=nil,FarmSettings={},TrainingEnabled=false
-}
-
-local cfn="eSPTS_Config.json"
-
-local function sc()
-        if not writefile then return end
-        local w=nil
-        if sv then
-                w={X=sv.X,Y=sv.Y,Z=sv.Z,
-                        RX=sv.RightVector.X,RY=sv.RightVector.Y,RZ=sv.RightVector.Z,
-                        UX=sv.UpVector.X,UY=sv.UpVector.Y,UZ=sv.UpVector.Z,
-                        BX=sv.LookVector.X,BY=sv.LookVector.Y,BZ=sv.LookVector.Z}
-        end
-        cfg.FarmSettings={
-                FistStrength=gcs("FistStrength"),BodyToughness=gcs("BodyToughness"),
-                PsychicPower=gcs("PsychicPower"),JumpForce=gcs("JumpForce"),
-                MovementSpeed=gcs("MovementSpeed")
-        }
-        local w2=hs:JSONEncode({
-                Keybind=cfg.Keybind.Name,SelectedTraining=st,AutoWeightActive=aw,
-                AutoSaveEnabled=cfg.AutoSaveEnabled,SavedPosition=w,
-                FarmSettings=cfg.FarmSettings,TrainingEnabled=(st~=nil)
-        })
-        writefile(cfn,w2)
-end
-
-local function lc()
-        if not readfile or not isfile or not isfile(cfn) then return false end
-        local w,w2=pcall(function() return hs:JSONDecode(readfile(cfn)) end)
-        if w and w2 then
-                if w2.Keybind and Enum.KeyCode[w2.Keybind] then cfg.Keybind=Enum.KeyCode[w2.Keybind]
-                else cfg.Keybind=Enum.KeyCode.G end
-                cfg.SelectedTraining=w2.SelectedTraining
-                cfg.AutoWeightActive=w2.AutoWeightActive or false
-                cfg.AutoSaveEnabled=w2.AutoSaveEnabled~=nil and w2.AutoSaveEnabled or true
-                cfg.FarmSettings=w2.FarmSettings or {}
-                cfg.TrainingEnabled=w2.TrainingEnabled or false
-                if w2.SavedPosition then
-                        local w3=w2.SavedPosition
-                        sv=CFrame.fromMatrix(
-                                Vector3.new(w3.X,w3.Y,w3.Z),
-                                Vector3.new(w3.RX,w3.RY,w3.RZ),
-                                Vector3.new(w3.UX,w3.UY,w3.UZ),
-                                Vector3.new(w3.BX,w3.BY,w3.BZ))
-                end
-                return true
-        end
-        return false
-end
-
-local function soc()
-        if cfg.AutoSaveEnabled then sc() end
-end
-
 for _,w in ipairs(cg) do
-        local w1=Instance.new("Frame")
-        w1.Size=UDim2.new(1,0,0,55);w1.BackgroundColor3=Color3.fromRGB(35,35,42)
-        w1.BorderSizePixel=0;w1.Parent=fc
-        do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,10);q.Parent=w1 end
-        local w2=Instance.new("TextLabel")
-        w2.Size=UDim2.new(1,-80,1,0);w2.Position=UDim2.new(0,15,0,0)
-        w2.BackgroundTransparency=1;w2.Text=dp[w];w2.TextColor3=Color3.fromRGB(200,200,200)
-        w2.Font=Enum.Font.GothamBold;w2.TextSize=14
-        w2.TextXAlignment=Enum.TextXAlignment.Left;w2.Parent=w1
-        local w3,w4=mt(w1,UDim2.new(0,56,0,28),UDim2.new(1,-35,.5,0),false)
-        fb[w]={f=w1,l=w2,tg=w4}
-        cn(w1.MouseEnter,function()
-                if st~=w then pt(w1,ti.f,{BackgroundColor3=Color3.fromRGB(45,45,52)}) end
-        end)
-        cn(w1.MouseLeave,function()
-                if st~=w then pt(w1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)}) end
-        end)
-        cn(w3.MouseButton1Click,function()
-                local on=not w4.v
-                stg(w4,on)
-                if on then
-                        for w5,w6 in pairs(fb) do
-                                if w5~=w then
-                                        stg(w6.tg,false)
-                                        pt(w6.f,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
-                                        w6.l.TextColor3=Color3.fromRGB(200,200,200)
-                                end
-                        end
-                        st=w
-                        pt(w1,ti.f,{BackgroundColor3=Color3.fromRGB(40,55,50)})
-                        w2.TextColor3=Color3.fromRGB(255,255,255)
-                        local w5=gcs(w)
-                        local w6=fba(w,w5)
-                        if not w6 then
-                                it.Text=dp[w].." \226\128\148 No available area"
-                                ac=nil;soc();return
-                        end
-                        local w7=gao(w,w6)
-                        ao=w7
-                        if not w7 then
-                                it.Text="Area '"..w6.."' not found!"
-                                ac=nil;soc();return
-                        end
-                        local w8,w9=tta(w7)
-                        if w8 then
-                                ac=w9
-                                it.Text=dp[w].." \226\128\148 Area: "..w6.." (req "..ar[w][w6].req..")"
-                        else
-                                it.Text="Teleport failed!"
-                        end
-                else
-                        st=nil;ao=nil;ac=nil
-                        pt(w1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
-                        w2.TextColor3=Color3.fromRGB(200,200,200)
-                        it.Text="No active training"
-                end
-                soc()
-        end)
+	local w1=Instance.new("Frame")
+	w1.Size=UDim2.new(1,0,0,55);w1.BackgroundColor3=Color3.fromRGB(35,35,42)
+	w1.BorderSizePixel=0;w1.Parent=fc
+do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,10);q.Parent=w1 end
+	local w2=Instance.new("TextLabel")
+	w2.Size=UDim2.new(1,-80,1,0);w2.Position=UDim2.new(0,15,0,0)
+	w2.BackgroundTransparency=1;w2.Text=dp[w];w2.TextColor3=Color3.fromRGB(200,200,200)
+	w2.Font=Enum.Font.GothamBold;w2.TextSize=14
+	w2.TextXAlignment=Enum.TextXAlignment.Left;w2.Parent=w1
+	local w3,w4=mt(w1,UDim2.new(0,56,0,28),UDim2.new(1,-35,.5,0),false)
+	fb[w]={f=w1,l=w2,tg=w4}
+	cn(w1.MouseEnter,function()
+		if cf.st~=w then pt(w1,ti.f,{BackgroundColor3=Color3.fromRGB(45,45,52)}) end
+	end)
+	cn(w1.MouseLeave,function()
+		if cf.st~=w then pt(w1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)}) end
+	end)
+	cn(w3.MouseButton1Click,function()
+		if not dbn("T",.3) then return end
+		local on=not w4.v
+		stg(w4,on)
+		if on then
+			for w5,w6 in pairs(fb) do
+				if w5~=w then
+					stg(w6.tg,false)
+					pt(w6.f,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
+					w6.l.TextColor3=Color3.fromRGB(200,200,200)
+				end
+			end
+			cf.st=w
+			pt(w1,ti.f,{BackgroundColor3=Color3.fromRGB(40,55,50)})
+			w2.TextColor3=Color3.fromRGB(255,255,255)
+			local w5=gcs(w)
+			local w6=fba(w,w5)
+			if not w6 then
+				it.Text=dp[w].." \226\128\148 No available area"
+				ac=nil;scf();return
+			end
+			local w7=gao(w,w6)
+			ao=w7
+			if not w7 then
+				it.Text="Area '"..w6.."' not found!"
+				ac=nil;scf();return
+			end
+			local w8,w9=tta(w7)
+			if w8 then
+				ac=w9
+				it.Text=dp[w].." \226\128\148 Area: "..w6.." (req "..ar[w][w6].req..")"
+			else
+				it.Text="Teleport failed!"
+			end
+		else
+			cf.st=nil;ao=nil;ac=nil
+			pt(w1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
+			w2.TextColor3=Color3.fromRGB(200,200,200)
+			it.Text="No active training"
+		end
+		scf()
+	end)
 end
 
 local wc=tcs["Auto Weights"]
@@ -521,41 +499,46 @@ wbl.BackgroundTransparency=1;wbl.Text="Auto Weight";wbl.TextColor3=Color3.fromRG
 wbl.Font=Enum.Font.GothamBold;wbl.TextSize=14
 wbl.TextXAlignment=Enum.TextXAlignment.Left;wbl.Parent=wbf
 
-local wbt,wts=mt(wbf,UDim2.new(0,56,0,28),UDim2.new(1,-35,.5,0),aw)
+local wbt,wts=mt(wbf,UDim2.new(0,56,0,28),UDim2.new(1,-35,.5,0),false)
 
-local function swf()
-        if wfc then wfc:Disconnect();wfc=nil end
-        wfc=cn(rs.Heartbeat,function()
-                if not mg or not mg.Parent then if wfc then wfc:Disconnect();wfc=nil end;return end
-                if not aw then if wfc then wfc:Disconnect();wfc=nil end;return end
-                re:FireServer(unpack({{"Add_MS_Request"}}))
-                re:FireServer(unpack({{"Add_JF_Request"}}))
-        end)
-        _eSPTS.fc=wfc
+local function dW()
+	klT("W")
+	if not cf.aw then return end
+	thr.W=task.spawn(function()
+		while cf.aw do
+			task.wait(1)
+			if cf.aw and mg and mg.Parent then
+				re:FireServer(unpack({{"Add_MS_Request"}}))
+				re:FireServer(unpack({{"Add_JF_Request"}}))
+			end
+		end
+		thr.W=nil
+	end)
 end
 
 local function uwb()
-        if aw then
-                pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(40,55,50)})
-                wbl.TextColor3=Color3.fromRGB(255,255,255)
-                wit.Text="Auto Weight active \226\128\148 farming MS and JF automatically"
-                ebw();swf()
-        else
-                pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
-                wbl.TextColor3=Color3.fromRGB(200,200,200)
-                wit.Text="Auto weight system inactive"
-                if wfc then wfc:Disconnect();wfc=nil end
-        end
+	if cf.aw then
+		pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(40,55,50)})
+		wbl.TextColor3=Color3.fromRGB(255,255,255)
+		wit.Text="Auto Weight active \226\128\148 farming MS and JF automatically"
+		ebw();dW()
+	else
+		pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
+		wbl.TextColor3=Color3.fromRGB(200,200,200)
+		wit.Text="Auto weight system inactive"
+		klT("W")
+	end
 end
 
 cn(wbt.MouseButton1Click,function()
-        aw=not aw;stg(wts,aw);cfg.AutoWeightActive=aw;uwb();soc()
+	if not dbn("AW",.3) then return end
+	cf.aw=not cf.aw;stg(wts,cf.aw);uwb();scf()
 end)
 cn(wbf.MouseEnter,function()
-        if not aw then pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(45,45,52)}) end
+	if not cf.aw then pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(45,45,52)}) end
 end)
 cn(wbf.MouseLeave,function()
-        if not aw then pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)}) end
+	if not cf.aw then pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)}) end
 end)
 
 local pc=tcs["Position Man"]
@@ -584,20 +567,20 @@ s2.Text="Save Current Position";s2.TextColor3=Color3.fromRGB(200,200,200)
 s2.Font=Enum.Font.GothamBold;s2.TextSize=14;s2.AutoButtonColor=false;s2.Parent=s1
 
 ba(s2,
-        {BackgroundColor3=Color3.fromRGB(35,35,42),Size=UDim2.new(1,0,0,55)},
-        {BackgroundColor3=Color3.fromRGB(45,45,52),Size=UDim2.new(1,0,0,58)},
-        {BackgroundColor3=Color3.fromRGB(55,55,62),Size=UDim2.new(1,0,0,51)})
+	{BackgroundColor3=Color3.fromRGB(35,35,42),Size=UDim2.new(1,0,0,55)},
+	{BackgroundColor3=Color3.fromRGB(45,45,52),Size=UDim2.new(1,0,0,58)},
+	{BackgroundColor3=Color3.fromRGB(55,55,62),Size=UDim2.new(1,0,0,51)})
 
 cn(s2.MouseButton1Click,function()
-        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                sv=p.Character.HumanoidRootPart.CFrame
-                pt(s1,ti.f,{BackgroundColor3=Color3.fromRGB(50,220,100)})
-                s2.TextColor3=Color3.fromRGB(255,255,255)
-                px.Text="Position saved! You will respawn here and be pulled back if you go too far."
-                task.wait(.5)
-                pt(s1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
-                s2.TextColor3=Color3.fromRGB(200,200,200);soc()
-        end
+	if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+		cf.sv=p.Character.HumanoidRootPart.CFrame
+		pt(s1,ti.f,{BackgroundColor3=Color3.fromRGB(50,220,100)})
+		s2.TextColor3=Color3.fromRGB(255,255,255)
+		px.Text="Position saved! You will respawn here and be pulled back if you go too far."
+		task.wait(.5)
+		pt(s1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
+		s2.TextColor3=Color3.fromRGB(200,200,200);scf()
+	end
 end)
 
 local c1=Instance.new("Frame")
@@ -611,17 +594,17 @@ c2.Text="Clear Saved Position";c2.TextColor3=Color3.fromRGB(200,200,200)
 c2.Font=Enum.Font.GothamBold;c2.TextSize=14;c2.AutoButtonColor=false;c2.Parent=c1
 
 ba(c2,
-        {BackgroundColor3=Color3.fromRGB(35,35,42),Size=UDim2.new(1,0,0,55)},
-        {BackgroundColor3=Color3.fromRGB(45,45,52),Size=UDim2.new(1,0,0,58)},
-        {BackgroundColor3=Color3.fromRGB(55,55,62),Size=UDim2.new(1,0,0,51)})
+	{BackgroundColor3=Color3.fromRGB(35,35,42),Size=UDim2.new(1,0,0,55)},
+	{BackgroundColor3=Color3.fromRGB(45,45,52),Size=UDim2.new(1,0,0,58)},
+	{BackgroundColor3=Color3.fromRGB(55,55,62),Size=UDim2.new(1,0,0,51)})
 
 cn(c2.MouseButton1Click,function()
-        sv=nil
-        pt(c1,ti.f,{BackgroundColor3=Color3.fromRGB(220,50,50)})
-        c2.TextColor3=Color3.fromRGB(255,255,255)
-        px.Text="Position cleared!";task.wait(.5)
-        pt(c1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
-        c2.TextColor3=Color3.fromRGB(200,200,200);px.Text="No position saved";soc()
+	cf.sv=nil
+	pt(c1,ti.f,{BackgroundColor3=Color3.fromRGB(220,50,50)})
+	c2.TextColor3=Color3.fromRGB(255,255,255)
+	px.Text="Position cleared!";task.wait(.5)
+	pt(c1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
+	c2.TextColor3=Color3.fromRGB(200,200,200);px.Text="No position saved";scf()
 end)
 
 local cc=tcs["Configs"]
@@ -645,141 +628,158 @@ kb.Font=Enum.Font.GothamBold;kb.TextSize=18;kb.AutoButtonColor=false;kb.Parent=k
 do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,8);q.Parent=kb end
 
 ba(kb,
-        {BackgroundColor3=Color3.fromRGB(45,45,52),Size=UDim2.new(0,100,0,40)},
-        {BackgroundColor3=Color3.fromRGB(60,60,70),Size=UDim2.new(0,105,0,44)},
-        {BackgroundColor3=Color3.fromRGB(80,80,90),Size=UDim.new(0,95,0,36)})
+	{BackgroundColor3=Color3.fromRGB(45,45,52),Size=UDim2.new(0,100,0,40)},
+	{BackgroundColor3=Color3.fromRGB(60,60,70),Size=UDim2.new(0,105,0,44)},
+	{BackgroundColor3=Color3.fromRGB(80,80,90),Size=UDim2.new(0,95,0,36)})
 
 local wk=false
 cn(kb.MouseButton1Click,function()
-        if wk then return end
-        wk=true;kb.Text="..."
-        local w
-        w=ui.InputBegan:Connect(function(w1,gp)
-                if gp then return end
-                if w1.UserInputType==Enum.UserInputType.Keyboard then
-                        cfg.Keybind=w1.KeyCode;kb.Text=w1.KeyCode.Name
-                        soc();wk=false;w:Disconnect()
-                end
-        end)
+	if wk then return end
+	wk=true;kb.Text="..."
+	local w
+	w=cn(ui.InputBegan,function(w1,gp)
+		if gp then return end
+		if w1.UserInputType==Enum.UserInputType.Keyboard then
+			cf.kb=w1.KeyCode.Name;kb.Text=cf.kb
+			scf();wk=false;w:Disconnect()
+		end
+	end)
 end)
 
-local function alc()
-        if kb and cfg.Keybind then kb.Text=cfg.Keybind.Name end
-        if cfg.AutoWeightActive~=nil then
-                aw=cfg.AutoWeightActive;stg(wts,aw);uwb()
-        end
-        if cfg.SelectedTraining then
-                st=cfg.SelectedTraining
-                for w,w2 in pairs(fb) do
-                        if w==st then
-                                stg(w2.tg,true)
-                                pt(w2.f,ti.f,{BackgroundColor3=Color3.fromRGB(40,55,50)})
-                                w2.l.TextColor3=Color3.fromRGB(255,255,255)
-                        local w3=gcs(w);local w4=fba(w,w3)
-                                if w4 then
-                                        local w5=gao(w,w4);ao=w5
-                                        if w5 then
-                                                local w6,w7=tta(w5)
-                                                if w6 then
-                                                        ac=w7
-                                                        it.Text=dp[w].." \226\128\148 Area: "..w4.." (req "..ar[w][w4].req..")"
-                                                end
-                                        end
-                                end
-                        else
-                                stg(w2.tg,false)
-                                pt(w2.f,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
-                                w2.l.TextColor3=Color3.fromRGB(200,200,200)
-                        end
-                end
-                if not cfg.TrainingEnabled then it.Text="No active training" end
-        end
-        if sv then px.Text="Position loaded from config!" end
-        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and sv then
-                task.wait(.5);p.Character.HumanoidRootPart.CFrame=sv
-        end
+local drH=false
+local function dr(fr,cb2)
+	local w1,w2,w3,w4=false,nil,nil,nil
+	cn(fr.InputBegan,function(w5)
+		if w5.UserInputType==Enum.UserInputType.MouseButton1 or w5.UserInputType==Enum.UserInputType.Touch then
+			w1=true;w3=w5.Position;w4=fr.Position
+			if w2 then w2:Disconnect() end
+			w2=ui.InputChanged:Connect(function(w6)
+				if (w6.UserInputType==Enum.UserInputType.MouseMovement or w6.UserInputType==Enum.UserInputType.Touch) and w1 then
+					local w7=w6.Position-w3;fr.Position=UDim2.new(w4.X.Scale,w4.X.Offset+w7.X,w4.Y.Scale,w4.Y.Offset+w7.Y)
+				end
+			end)
+			w5.Changed:Connect(function() if w5.UserInputState==Enum.UserInputState.End then w1=false;if w2 then w2:Disconnect();w2=nil end;if cb2 then cb2() end end end)
+		end
+	end)
 end
 
-local ld=lc()
-if ld then task.wait(.1);alc() end
+dr(mf,function() cf.up={X=mf.Position.X.Offset,Y=mf.Position.Y.Offset};scf() end)
+
+mg.Destroying:Connect(function()
+	scf()
+	for _,w in pairs(thr) do if typeof(w)=="thread" and coroutine.status(w)~="dead" then pcall(task.cancel,w) end end
+end)
+
+local ld=lcf()
+if ld then
+	if cf.kb then kb.Text=cf.kb end
+	stg(wts,cf.aw);uwb()
+	if cf.st then
+		for w,w2 in pairs(fb) do
+			if w==cf.st then
+				stg(w2.tg,true)
+				pt(w2.f,ti.f,{BackgroundColor3=Color3.fromRGB(40,55,50)})
+				w2.l.TextColor3=Color3.fromRGB(255,255,255)
+			local w3=gcs(w);local w4=fba(w,w3)
+				if w4 then
+					local w5=gao(w,w4);ao=w5
+					if w5 then
+						local w6,w7=tta(w5)
+						if w6 then
+							ac=w7
+							it.Text=dp[w].." \226\128\148 Area: "..w4.." (req "..ar[w][w4].req..")"
+						end
+					end
+				end
+			else
+				stg(w2.tg,false)
+				pt(w2.f,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
+				w2.l.TextColor3=Color3.fromRGB(200,200,200)
+			end
+		end
+	else
+		it.Text="No active training"
+	end
+	if cf.sv then px.Text="Position loaded from config!" end
+	if cf.up and cf.up.X and cf.up.Y then mf.Position=UDim2.new(0,cf.up.X,0,cf.up.Y) end
+	sw(cf.tb or "Auto Farm")
+else
+	sw("Auto Farm")
+end
 
 local io=false
 local ix=false
 
 local function tu()
-        if ix then return end
-        ix=true;io=not io
-        if io then
-                mf.Size=UDim2.new(0,0,0,0);mf.Visible=true
-                pt(mf,ti.b,{Size=UDim2.new(0,600,0,480)})
-                task.wait(.5);ix=false
-        else
-                pt(mf,ti.bi,{Size=UDim2.new(0,0,0,0)})
-                task.wait(.35);mf.Visible=false;ix=false
-        end
+	if ix then return end
+	ix=true;io=not io
+	if io then
+		mf.Size=UDim2.new(0,0,0,0);mf.Visible=true
+		pt(mf,ti.b,{Size=UDim2.new(0,600,0,480)})
+		task.wait(.5);ix=false
+	else
+		pt(mf,ti.bi,{Size=UDim2.new(0,0,0,0)})
+		task.wait(.35);mf.Visible=false;ix=false
+	end
 end
 
 cn(tgb.MouseButton1Click,function() if not ix then tu() end end)
 cn(cb.MouseButton1Click,function() if not ix and io then tu() end end)
 cn(ui.InputBegan,function(w,gp)
-        if gp then return end
-        if w.KeyCode==cfg.Keybind and not ix then tu() end
+	if gp then return end
+	if w.KeyCode==Enum.KeyCode[cf.kb] and not ix then tu() end
 end)
 
 cn(rs.Heartbeat,function()
-        if not mg or not mg.Parent then return end
-        if sv and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local w=p.Character.HumanoidRootPart
-                if (w.Position-sv.Position).Magnitude>20 then w.CFrame=sv end
-        end
-        if not st then return end
-        local w=p.Character
-        if not w then return end
-        local w1=w:FindFirstChild("HumanoidRootPart")
-        if not w1 then return end
-        local w2=gcs(st)
-        local w3=fba(st,w2)
-        if w3 and (not ao or ao.Name~=w3) then
-                local w4=gao(st,w3)
-                if w4 then
-                        ao=w4;local w5,w6=tta(w4)
-                        if w5 then
-                                ac=w6
-                                it.Text=dp[st].." \226\128\148 Area: "..w3.." (req "..ar[st][w3].req..")"
-                        end
-                end
-        end
-        if ac then
-                if (w1.Position-ac.Position).Magnitude>md then w1.CFrame=ac end
-        end
-        if st=="FistStrength" then
-                if w2<=ctn("10T") then re:FireServer(unpack({{"Add_FS_Request"}})) end
-        end
+	if not mg or not mg.Parent then return end
+	if cf.sv and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+		local w=p.Character.HumanoidRootPart
+		if (w.Position-cf.sv.Position).Magnitude>20 then w.CFrame=cf.sv end
+	end
+	if not cf.st then return end
+	local w=p.Character
+	if not w then return end
+	local w1=w:FindFirstChild("HumanoidRootPart")
+	if not w1 then return end
+	local w2=gcs(cf.st)
+	local w3=fba(cf.st,w2)
+	if w3 and (not ao or ao.Name~=w3) then
+		local w4=gao(cf.st,w3)
+		if w4 then
+			ao=w4;local w5,w6=tta(w4)
+			if w5 then
+				ac=w6
+				it.Text=dp[cf.st].." \226\128\148 Area: "..w3.." (req "..ar[cf.st][w3].req..")"
+			end
+		end
+	end
+	if ac then
+		if (w1.Position-ac.Position).Magnitude>15 then w1.CFrame=ac end
+	end
+	if cf.st=="FistStrength" then
+		if w2<=ctn("10T") then re:FireServer(unpack({{"Add_FS_Request"}})) end
+	end
 end)
 
 cn(p.CharacterAdded,function(w)
-        if not mg or not mg.Parent then return end
-        task.wait(1)
-        local w1=w:WaitForChild("HumanoidRootPart",5)
-        if sv then task.wait(.2);w1.CFrame=sv end
-        if aw then task.wait(.33);ebw();swf() end
-        if st and ao then
-                local w2,w3=tta(ao)
-                if w2 then ac=w3 end
-        end
+	if not mg or not mg.Parent then return end
+	task.wait(1)
+	local w1=w:WaitForChild("HumanoidRootPart",5)
+	if cf.sv then task.wait(.2);w1.CFrame=cf.sv end
+	if cf.aw then task.wait(.33);ebw();dW() end
+	if cf.st and ao then
+		local w2,w3=tta(ao)
+		if w2 then ac=w3 end
+	end
 end)
 
 if p.Character then
-        task.wait(1)
-        if sv and p.Character:FindFirstChild("HumanoidRootPart") then
-                p.Character.HumanoidRootPart.CFrame=sv
-        end
+	task.wait(1)
+	if cf.sv and p.Character:FindFirstChild("HumanoidRootPart") then
+		p.Character.HumanoidRootPart.CFrame=cf.sv
+	end
 end
 
 if queue_on_teleport then
-        queue_on_teleport([[
-        wait(2)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/halocookiebob-sudo/SPTS/refs/heads/main/SptsEndless",true))()
-        wait(1)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/6942x/UniversalUtility/refs/heads/main/Init.lua",true))()]])
+	queue_on_teleport([[wait(2)loadstring(game:HttpGet("https://raw.githubusercontent.com/halocookiebob-sudo/SPTS/refs/heads/main/SptsEndless",true))()wait(1)loadstring(game:HttpGet("https://raw.githubusercontent.com/6942x/UniversalUtility/refs/heads/main/Init.lua",true))()]])
 end
