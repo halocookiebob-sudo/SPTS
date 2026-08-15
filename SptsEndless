@@ -9,34 +9,62 @@ if _eSPTS then
 	for _,w in pairs(_eSPTS.tw or {}) do pcall(function() w:Cancel() end) end
 	for _,w in pairs(_eSPTS.th or {}) do if typeof(w)=="thread" and coroutine.status(w)~="dead" then pcall(task.cancel,w) end end
 end
+
 _eSPTS={cn={},tw={},th={}}
 
+local nm=p.Name
+local id=p.UserId
+if not nm or nm=="" then repeat nm=p.Name;task.wait() until nm and nm~="" end
+
+local cf={kb="G",st=nil,aw=false,as=true,tb="Auto Farm",sv=nil,up=nil}
+local mf
+local vp=false
+local lt=0
+local fp="eSPTS/Accounts/"..nm..".json"
 local inf=sg:WaitForChild("MenuFrame"):WaitForChild("InfoFrame")
 local ap=workspace:WaitForChild("Map"):WaitForChild("Training_Collisions")
 local re=game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
 
-local cf={kb="G",st=nil,aw=false,as=true,tb="Auto Farm",sv=nil,up=nil}
-local cnf="eSPTS_Config.json"
-
-local function scf()
-	if not writefile then return end
-	local w=cf.sv and {X=cf.sv.X,Y=cf.sv.Y,Z=cf.sv.Z,RX=cf.sv.RX,RY=cf.sv.RY,RZ=cf.sv.RZ,UX=cf.sv.UX,UY=cf.sv.UY,UZ=cf.sv.UZ,BX=cf.sv.BX,BY=cf.sv.BY,BZ=cf.sv.BZ} or nil
-	writefile(cnf,hs:JSONEncode({kb=cf.kb,st=cf.st,aw=cf.aw,as=cf.as,tb=cf.tb,sv=w,up=cf.up}))
+local function ef()
+	if not makefolder or not isfolder then return end
+	if not isfolder("eSPTS") then makefolder("eSPTS") end
+	if not isfolder("eSPTS/Accounts") then makefolder("eSPTS/Accounts") end
 end
 
-local function lcf()
-	if not readfile or not isfile or not isfile(cnf) then return false end
-	local w,w2=pcall(function() return hs:JSONDecode(readfile(cnf)) end)
-	if not w or not w2 then return false end
+local function sc()
+	if not writefile then return false end
+	ef()
+	if mf and mf.Visible then
+		cf.up={X=mf.Position.X.Offset,Y=mf.Position.Y.Offset}
+	end
+	local w,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12
+	if cf.sv then
+		w,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12=cf.sv:GetComponents()
+	end
+	local sv=w and {w,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12} or nil
+	local w13={id=id,nm=nm,kb=cf.kb,st=cf.st,aw=cf.aw,as=cf.as,tb=cf.tb,sv=sv,up=cf.up}
+	local w14,w15=pcall(function() writefile(fp,hs:JSONEncode(w13)) end)
+	if w14 then lt=tick();vp=false;return true end
+	vp=false
+	return false
+end
+
+local function ds()
+	if vp then return end
+	vp=true
+	local w=tick()-lt
+	if w>=.1 then sc()
+	else task.delay(.1-w,function() if vp then sc() end) end
+end
+
+local function lc()
+	if not readfile or not isfile or not isfile(fp) then return false end
+	local w,w2=pcall(function() return hs:JSONDecode(readfile(fp)) end)
+	if not w or not w2 or w2.id~=id then return false end
 	cf.kb=w2.kb or "G";cf.st=w2.st;cf.aw=w2.aw or false
 	cf.as=w2.as~=nil and w2.as or true;cf.tb=w2.tb or "Auto Farm"
-	if w2.sv then
-		local w3=w2.sv
-		cf.sv=CFrame.fromMatrix(
-			Vector3.new(w3.X,w3.Y,w3.Z),
-			Vector3.new(w3.RX,w3.RY,w3.RZ),
-			Vector3.new(w3.UX,w3.UY,w3.UZ),
-			Vector3.new(w3.BX,w3.BY,w3.BZ))
+	if w2.sv and #w2.sv==12 then
+		cf.sv=CFrame.new(unpack(w2.sv))
 	end
 	cf.up=w2.up
 	return true
@@ -51,6 +79,7 @@ local ti={
 	e=TweenInfo.new(.60,Enum.EasingStyle.Elastic,Enum.EasingDirection.Out),
 	sm=TweenInfo.new(.30,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
 }
+
 local yt={}
 
 local function xt(w)
@@ -73,7 +102,7 @@ local function cn(w,f)
 end
 
 local thr={}
-local function klT(n)
+local function kl(n)
 	if thr[n] then
 		local w=thr[n];thr[n]=nil
 		if typeof(w)=="thread" and coroutine.status(w)~="dead" then pcall(task.cancel,w) end
@@ -281,7 +310,7 @@ ba(tgb,{Size=UDim2.new(0,80,0,80)},{Size=UDim2.new(0,90,0,90)},{Size=UDim2.new(0
 cn(tgb.MouseEnter,function() pt(tgl,ti.f,{TextSize=22}) end)
 cn(tgb.MouseLeave,function() pt(tgl,ti.f,{TextSize=20}) end)
 
-local mf=Instance.new("Frame")
+mf=Instance.new("Frame")
 mf.Name="MainFrame";mf.Size=UDim2.new(0,600,0,480)
 mf.Position=UDim2.new(.5,0,.5,0);mf.AnchorPoint=Vector2.new(.5,.5)
 mf.BackgroundColor3=Color3.fromRGB(25,25,30);mf.BorderSizePixel=0
@@ -341,7 +370,7 @@ for w,w2 in ipairs(tbs) do
 	w3.Size=UDim2.new(0,130,0,36);w3.BackgroundColor3=Color3.fromRGB(35,35,42)
 	w3.BorderSizePixel=0;w3.Text=w2;w3.TextColor3=Color3.fromRGB(180,180,180)
 	w3.Font=Enum.Font.GothamBold;w3.TextSize=13;w3.AutoButtonColor=false;w3.Parent=tcg
-do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,8);q.Parent=w3 end
+	do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,8);q.Parent=w3 end
 	tbn[w2]=w3
 	local w5=Instance.new("ScrollingFrame")
 	w5.Size=UDim2.new(1,0,1,0);w5.BackgroundTransparency=1;w5.BorderSizePixel=0
@@ -358,7 +387,7 @@ end
 local ao=nil
 local ac=nil
 
-local dp={
+local dn={
 	FistStrength="Fist Strength",BodyToughness="Body Toughness",
 	PsychicPower="Psychic Power",JumpForce="Jump Force",MovementSpeed="Movement Speed"
 }
@@ -375,7 +404,7 @@ local function sw(w)
 		end
 	end
 	for w2,w3 in pairs(tcs) do w3.Visible=(w2==w) end
-	cf.tb=w;scf()
+	cf.tb=w;ds()
 end
 
 for w2,w3 in pairs(tbn) do
@@ -415,10 +444,10 @@ for _,w in ipairs(cg) do
 	local w1=Instance.new("Frame")
 	w1.Size=UDim2.new(1,0,0,55);w1.BackgroundColor3=Color3.fromRGB(35,35,42)
 	w1.BorderSizePixel=0;w1.Parent=fc
-do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,10);q.Parent=w1 end
+	do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,10);q.Parent=w1 end
 	local w2=Instance.new("TextLabel")
 	w2.Size=UDim2.new(1,-80,1,0);w2.Position=UDim2.new(0,15,0,0)
-	w2.BackgroundTransparency=1;w2.Text=dp[w];w2.TextColor3=Color3.fromRGB(200,200,200)
+	w2.BackgroundTransparency=1;w2.Text=dn[w];w2.TextColor3=Color3.fromRGB(200,200,200)
 	w2.Font=Enum.Font.GothamBold;w2.TextSize=14
 	w2.TextXAlignment=Enum.TextXAlignment.Left;w2.Parent=w1
 	local w3,w4=mt(w1,UDim2.new(0,56,0,28),UDim2.new(1,-35,.5,0),false)
@@ -447,19 +476,19 @@ do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,10);q.Parent=w1 en
 			local w5=gcs(w)
 			local w6=fba(w,w5)
 			if not w6 then
-				it.Text=dp[w].." \226\128\148 No available area"
-				ac=nil;scf();return
+				it.Text=dn[w].." \226\128\148 No available area"
+				ac=nil;ds();return
 			end
 			local w7=gao(w,w6)
 			ao=w7
 			if not w7 then
 				it.Text="Area '"..w6.."' not found!"
-				ac=nil;scf();return
+				ac=nil;ds();return
 			end
 			local w8,w9=tta(w7)
 			if w8 then
 				ac=w9
-				it.Text=dp[w].." \226\128\148 Area: "..w6.." (req "..ar[w][w6].req..")"
+				it.Text=dn[w].." \226\128\148 Area: "..w6.." (req "..ar[w][w6].req..")"
 			else
 				it.Text="Teleport failed!"
 			end
@@ -469,7 +498,7 @@ do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,10);q.Parent=w1 en
 			w2.TextColor3=Color3.fromRGB(200,200,200)
 			it.Text="No active training"
 		end
-		scf()
+		ds()
 	end)
 end
 
@@ -502,7 +531,7 @@ wbl.TextXAlignment=Enum.TextXAlignment.Left;wbl.Parent=wbf
 local wbt,wts=mt(wbf,UDim2.new(0,56,0,28),UDim2.new(1,-35,.5,0),false)
 
 local function dW()
-	klT("W")
+	kl("W")
 	if not cf.aw then return end
 	thr.W=task.spawn(function()
 		while cf.aw do
@@ -526,13 +555,13 @@ local function uwb()
 		pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
 		wbl.TextColor3=Color3.fromRGB(200,200,200)
 		wit.Text="Auto weight system inactive"
-		klT("W")
+		kl("W")
 	end
 end
 
 cn(wbt.MouseButton1Click,function()
 	if not dbn("AW",.3) then return end
-	cf.aw=not cf.aw;stg(wts,cf.aw);uwb();scf()
+	cf.aw=not cf.aw;stg(wts,cf.aw);uwb();ds()
 end)
 cn(wbf.MouseEnter,function()
 	if not cf.aw then pt(wbf,ti.f,{BackgroundColor3=Color3.fromRGB(45,45,52)}) end
@@ -579,7 +608,7 @@ cn(s2.MouseButton1Click,function()
 		px.Text="Position saved! You will respawn here and be pulled back if you go too far."
 		task.wait(.5)
 		pt(s1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
-		s2.TextColor3=Color3.fromRGB(200,200,200);scf()
+		s2.TextColor3=Color3.fromRGB(200,200,200);ds()
 	end
 end)
 
@@ -604,7 +633,7 @@ cn(c2.MouseButton1Click,function()
 	c2.TextColor3=Color3.fromRGB(255,255,255)
 	px.Text="Position cleared!";task.wait(.5)
 	pt(c1,ti.f,{BackgroundColor3=Color3.fromRGB(35,35,42)})
-	c2.TextColor3=Color3.fromRGB(200,200,200);px.Text="No position saved";scf()
+	c2.TextColor3=Color3.fromRGB(200,200,200);px.Text="No position saved";ds()
 end)
 
 local cc=tcs["Configs"]
@@ -614,11 +643,11 @@ kf.Size=UDim2.new(1,0,0,90);kf.BackgroundColor3=Color3.fromRGB(35,35,42)
 kf.BorderSizePixel=0;kf.Parent=cc
 do local q=Instance.new("UICorner");q.CornerRadius=UDim.new(0,10);q.Parent=kf end
 
-local kl=Instance.new("TextLabel")
-kl.Size=UDim2.new(1,-20,0,35);kl.Position=UDim2.new(0,10,0,10)
-kl.BackgroundTransparency=1;kl.Text="Toggle Keybind"
-kl.TextColor3=Color3.fromRGB(200,200,200);kl.Font=Enum.Font.GothamBold
-kl.TextSize=16;kl.TextXAlignment=Enum.TextXAlignment.Left;kl.Parent=kf
+local kl2=Instance.new("TextLabel")
+kl2.Size=UDim2.new(1,-20,0,35);kl2.Position=UDim2.new(0,10,0,10)
+kl2.BackgroundTransparency=1;kl2.Text="Toggle Keybind"
+kl2.TextColor3=Color3.fromRGB(200,200,200);kl2.Font=Enum.Font.GothamBold
+kl2.TextSize=16;kl2.TextXAlignment=Enum.TextXAlignment.Left;kl2.Parent=kf
 
 local kb=Instance.new("TextButton")
 kb.Size=UDim2.new(0,100,0,40);kb.Position=UDim2.new(0,10,0,45)
@@ -641,12 +670,11 @@ cn(kb.MouseButton1Click,function()
 		if gp then return end
 		if w1.UserInputType==Enum.UserInputType.Keyboard then
 			cf.kb=w1.KeyCode.Name;kb.Text=cf.kb
-			scf();wk=false;w:Disconnect()
+			ds();wk=false;w:Disconnect()
 		end
 	end)
 end)
 
-local drH=false
 local function dr(fr,cb2)
 	local w1,w2,w3,w4=false,nil,nil,nil
 	cn(fr.InputBegan,function(w5)
@@ -663,14 +691,14 @@ local function dr(fr,cb2)
 	end)
 end
 
-dr(mf,function() cf.up={X=mf.Position.X.Offset,Y=mf.Position.Y.Offset};scf() end)
+dr(mf,function() ds() end)
 
 mg.Destroying:Connect(function()
-	scf()
+	sc()
 	for _,w in pairs(thr) do if typeof(w)=="thread" and coroutine.status(w)~="dead" then pcall(task.cancel,w) end end
 end)
 
-local ld=lcf()
+local ld=lc()
 if ld then
 	if cf.kb then kb.Text=cf.kb end
 	stg(wts,cf.aw);uwb()
@@ -680,14 +708,14 @@ if ld then
 				stg(w2.tg,true)
 				pt(w2.f,ti.f,{BackgroundColor3=Color3.fromRGB(40,55,50)})
 				w2.l.TextColor3=Color3.fromRGB(255,255,255)
-			local w3=gcs(w);local w4=fba(w,w3)
+				local w3=gcs(w);local w4=fba(w,w3)
 				if w4 then
 					local w5=gao(w,w4);ao=w5
 					if w5 then
 						local w6,w7=tta(w5)
 						if w6 then
 							ac=w7
-							it.Text=dp[w].." \226\128\148 Area: "..w4.." (req "..ar[w][w4].req..")"
+							it.Text=dn[w].." \226\128\148 Area: "..w4.." (req "..ar[w][w4].req..")"
 						end
 					end
 				end
@@ -749,7 +777,7 @@ cn(rs.Heartbeat,function()
 			ao=w4;local w5,w6=tta(w4)
 			if w5 then
 				ac=w6
-				it.Text=dp[cf.st].." \226\128\148 Area: "..w3.." (req "..ar[cf.st][w3].req..")"
+				it.Text=dn[cf.st].." \226\128\148 Area: "..w3.." (req "..ar[cf.st][w3].req..")"
 			end
 		end
 	end
