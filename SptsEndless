@@ -1,453 +1,408 @@
 local md = 15
-local p = game:GetService("Players")
-local r = game:GetService("RunService")
-local u = game:GetService("UserInputService")
-local t = game:GetService("TweenService")
-local pl = p.LocalPlayer
-local sg = pl:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
-local nf = sg:WaitForChild("MenuFrame"):WaitForChild("InfoFrame")
+
+local pl = game:GetService("Players")
+local rs = game:GetService("RunService")
+local ui = game:GetService("UserInputService")
+local tw = game:GetService("TweenService")
+local p = pl.LocalPlayer
+local sg = p:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
+local inf = sg:WaitForChild("MenuFrame"):WaitForChild("InfoFrame")
 local ap = workspace:WaitForChild("Map"):WaitForChild("Training_Collisions")
-local rs = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
+local re = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
 local hs = game:GetService("HttpService")
 
-local w = {
-	BodyToughness = {
-		FireBathTouchPart={req="500",multi="x10"},Water={req="5",multi="x5"},
-		IcePart={req="5K",multi="x20"},LavaPart={req="500K",multi="x100"},
-		TornadoTouchPart={req="50K",multi="x50"},GreenFirePart={req="50M",multi="x2000"},
-		AcidPart={req="5B",multi="x40000"},LavaPart2={req="500B",multi="x800000"},
-		AFK_BT_1={req="7.383T",multi="x6M"},AFK_BT_2={req="655T",multi="x180M"},
-		AFK_BT_3={req="66.6Qa",multi="x5.5B"},AFK_BT_4={req="5.1Qi",multi="x162.5B"},
-		AFK_BT_5={req="460Qi",multi="x5T"},AFK_BT_6={req="40.05Sx",multi="x150T"},
-		AFK_BT_7={req="3.55Sp",multi="x4.5Qa"},AFK_BT_8={req="314Sp",multi="x131.2Qa"},
-		AFK_BT_9={req="27.78Oc",multi="x3.925Qi"},AFK_BT_10={req="2.473No",multi="x118Qi"},
-		AFK_BT_11={req="217.5No",multi="x3.55Sx"},AFK_BT_12={req="19.5Dc",multi="x106.2Sx"},
-		AFK_BT_13={req="1.7Ud",multi="x3.2Sp"},AFK_BT_14={req="155Ud",multi="x95.74Sp"},
-		AFK_BT_15={req="13.56Dd",multi="x2.5Oc"}
-	},
-	FistStrength = {
-		TrainingArea_2={req="0",multi="x10"},AFK_FS_1={req="1Qa",multi="x6M"},
-		TrainingArea_3={req="1M",multi="x100"},StarFSTraining1={req="1B",multi="x2000"},
-		StarFSTraining2={req="100B",multi="x40000"},StarFSTraining3={req="10T",multi="x800000"},
-		AFK_FS_2={req="100Qa",multi="x300M"},AFK_FS_3={req="15Qi",multi="x21B"},
-		AFK_FS_4={req="2.5Sx",multi="x2.308T"},AFK_FS_5={req="1Sp",multi="x347.5T"},
-		AFK_FS_6={req="500Sp",multi="x52Qa"},AFK_FS_7={req="250Oc",multi="x7.8Qi"},
-		AFK_FS_8={req="150No",multi="??"},AFK_FS_9={req="55Dc",multi="??"},
-		AFK_FS_10={req="30Ud",multi="??"},AFK_FS_11={req="11Dd",multi="??"}
-	},
-	MovementSpeed = {
-		AFK_MS_1={req="100T",multi="x1.3M"},AFK_MS_2={req="2.22Qa",multi="x16.9M"},
-		AFK_MS_3={req="60Qa",multi="x219.7M"},AFK_MS_4={req="1.5Qi",multi="x2.85B"},
-		AFK_MS_5={req="40Qi",multi="x37.2B"},AFK_MS_6={req="1Sx",multi="x482.4B"},
-		AFK_MS_7={req="25Sx",multi="x6.274T"},AFK_MS_8={req="750Sx",multi="x81.5T"},
-		AFK_MS_9={req="15.5Sp",multi="x2.12Qa"},AFK_MS_10={req="400Sp",multi="x13.77Qa"},
-		AFK_MS_11={req="10Oc",multi="x179.2Qa"}
-	},
-	PsychicPower = {
-		PPTrainingPart1={req="1M",multi="x100"},PPTrainingPart2={req="1B",multi="x10k"},
-		PPTrainingPart3={req="1T",multi="x1M"},PPTrainingPart4={req="1Qa",multi="x100M"},
-		AFK_PP_1={req="333Qa",multi="x2.5B"},AFK_PP_2={req="111Qi",multi="x250B"},
-		AFK_PP_3={req="33.3Sx",multi="x25T"},AFK_PP_4={req="11.1Sp",multi="x2.5Qa"},
-		AFK_PP_5={req="3.36Oc",multi="x250Qa"},AFK_PP_6={req="1.11No",multi="x25Qi"},
-		AFK_PP_7={req="444No",multi="x2.5Sx"},AFK_PP_8={req="111Dc",multi="??"},
-		AFK_PP_9={req="55.5Ud",multi="??"},AFK_PP_10={req="22.2Dd",multi="??"}
-	},
-	JumpForce = {
-		AFK_JF_1={req="100T",multi="x1.7M"},AFK_JF_2={req="5Qa",multi="x30.5M"},
-		AFK_JF_3={req="150Qa",multi="x550M"},AFK_JF_4={req="5Qi",multi="x9.92B"},
-		AFK_JF_5={req="200Qi",multi="??"},AFK_JF_6={req="10Sx",multi="??"},
-		AFK_JF_7={req="300Sx",multi="??"},AFK_JF_8={req="15Sp",multi="??"},
-		AFK_JF_9={req="400Sp",multi="???"}
-	}
+local ar = {
+    BodyToughness = {
+        FireBathTouchPart = {req = "500", multi = "x10"},
+        Water = {req = "5", multi = "x5"},
+        IcePart = {req = "5K", multi = "x20"},
+        LavaPart = {req = "500K", multi = "x100"},
+        TornadoTouchPart = {req = "50K", multi = "x50"},
+        GreenFirePart = {req = "50M", multi = "x2000"},
+        AcidPart = {req = "5B", multi = "x40000"},
+        LavaPart2 = {req = "500B", multi = "x800000"},
+        AFK_BT_1 = {req = "7.383T", multi = "x6M"},
+        AFK_BT_2 = {req = "655T", multi = "x180M"},
+        AFK_BT_3 = {req = "66.6Qa", multi = "x5.5B"},
+        AFK_BT_4 = {req = "5.1Qi", multi = "x162.5B"},
+        AFK_BT_5 = {req = "460Qi", multi = "x5T"},
+        AFK_BT_6 = {req = "40.05Sx", multi = "x150T"},
+        AFK_BT_7 = {req = "3.55Sp", multi = "x4.5Qa"},
+        AFK_BT_8 = {req = "314Sp", multi = "x131.2Qa"},
+        AFK_BT_9 = {req = "27.78Oc", multi = "x3.925Qi"},
+        AFK_BT_10 = {req = "2.473No", multi = "x118Qi"},
+        AFK_BT_11 = {req = "217.5No", multi = "x3.55Sx"},
+        AFK_BT_12 = {req = "19.5Dc", multi = "x106.2Sx"},
+        AFK_BT_13 = {req = "1.7Ud", multi = "x3.2Sp"},
+        AFK_BT_14 = {req = "155Ud", multi = "x95.74Sp"},
+        AFK_BT_15 = {req = "13.56Dd", multi = "x2.5Oc"}
+    },
+    FistStrength = {
+        TrainingArea_2 = {req = "0", multi = "x10"},
+        AFK_FS_1 = {req = "1Qa", multi = "x6M"},
+        TrainingArea_3 = {req = "1M", multi = "x100"},
+        StarFSTraining1 = {req = "1B", multi = "x2000"},
+        StarFSTraining2 = {req = "100B", multi = "x40000"},
+        StarFSTraining3 = {req = "10T", multi = "x800000"},
+        AFK_FS_2 = {req = "100Qa", multi = "x300M"},
+        AFK_FS_3 = {req = "15Qi", multi = "x21B"},
+        AFK_FS_4 = {req = "2.5Sx", multi = "x2.308T"},
+        AFK_FS_5 = {req = "1Sp", multi = "x347.5T"},
+        AFK_FS_6 = {req = "500Sp", multi = "x52Qa"},
+        AFK_FS_7 = {req = "250Oc", multi = "x7.8Qi"},
+        AFK_FS_8 = {req = "150No", multi = "???"},
+        AFK_FS_9 = {req = "55Dc", multi = "???"},
+        AFK_FS_10 = {req = "30Ud", multi = "???"},
+        AFK_FS_11 = {req = "11Dd", multi = "???"}
+    },
+    MovementSpeed = {
+        AFK_MS_1 = {req = "100T", multi = "x1.3M"},
+        AFK_MS_2 = {req = "2.22Qa", multi = "x16.9M"},
+        AFK_MS_3 = {req = "60Qa", multi = "x219.7M"},
+        AFK_MS_4 = {req = "1.5Qi", multi = "x2.85B"},
+        AFK_MS_5 = {req = "40Qi", multi = "x37.2B"},
+        AFK_MS_6 = {req = "1Sx", multi = "x482.4B"},
+        AFK_MS_7 = {req = "25Sx", multi = "x6.274T"},
+        AFK_MS_8 = {req = "750Sx", multi = "x81.5T"},
+        AFK_MS_9 = {req = "15.5Sp", multi = "x2.12Qa"},
+        AFK_MS_10 = {req = "400Sp", multi = "x13.77Qa"},
+        AFK_MS_11 = {req = "10Oc", multi = "x179.2Qa"}
+    },
+    PsychicPower = {
+        PPTrainingPart1 = {req = "1M", multi = "x100"},
+        PPTrainingPart2 = {req = "1B", multi = "x10k"},
+        PPTrainingPart3 = {req = "1T", multi = "x1M"},
+        PPTrainingPart4 = {req = "1Qa", multi = "x100M"},
+        AFK_PP_1 = {req = "333Qa", multi = "x2.5B"},
+        AFK_PP_2 = {req = "111Qi", multi = "x250B"},
+        AFK_PP_3 = {req = "33.3Sx", multi = "x25T"},
+        AFK_PP_4 = {req = "11.1Sp", multi = "x2.5Qa"},
+        AFK_PP_5 = {req = "3.36Oc", multi = "x250Qa"},
+        AFK_PP_6 = {req = "1.11No", multi = "x25Qi"},
+        AFK_PP_7 = {req = "444No", multi = "x2.5Sx"},
+        AFK_PP_8 = {req = "111Dc", multi = "???"},
+        AFK_PP_9 = {req = "55.5Ud", multi = "???"},
+        AFK_PP_10 = {req = "22.2Dd", multi = "???"}
+    },
+    JumpForce = {
+        AFK_JF_1 = {req = "100T", multi = "x1.7M"},
+        AFK_JF_2 = {req = "5Qa", multi = "x30.5M"},
+        AFK_JF_3 = {req = "150Qa", multi = "x550M"},
+        AFK_JF_4 = {req = "5Qi", multi = "x9.92B"},
+        AFK_JF_5 = {req = "200Qi", multi = "???"},
+        AFK_JF_6 = {req = "10Sx", multi = "???"},
+        AFK_JF_7 = {req = "300Sx", multi = "???"},
+        AFK_JF_8 = {req = "15Sp", multi = "???"},
+        AFK_JF_9 = {req = "400Sp", multi = "???"}
+    }
 }
 
-local w1 = {
-	{n="100 LB",ms=100,jf=5000},{n="1 TON",ms=5e3,jf=2e5},
-	{n="10 TON",ms=5e5,jf=2e6},{n="100 TON",ms=1e7,jf=1e7},
-	{n="1 K TON",ms=1e8,jf=2e8},{n="10 K TON",ms=1e9,jf=1e9},
-	{n="100 K TON",ms=1e10,jf=1e10},{n="1 M TON",ms=1e11,jf=1e11},
-	{n="10 M TON",ms=1e12,jf=1e12},{n="1 B TON",ms=1e13,jf=1e13},
-	{n="100 B TON",ms=2.56e28,jf=1.54e28},{n="10 T TON",ms=0,jf=6e26},
-	{n="1 Qa TON",ms=1.68e32,jf=2.221e31},{n="100 Qa TON",ms=4.288e33,jf=8.48e31},
-	{n="10 Qi TON",ms=1.082e34,jf=3.226e33},{n="1 Sx TON",ms=2.823e36,jf=1.229e36},
-	{n="100 Sx TON",ms=7.02e37,jf=4.683e37},{n="10 Sp TON",ms=1.852e39,jf=1.785e39},
-	{n="10 Oc TON",ms=4.744e39,jf=6.8e39}
+local wl = {
+    {n = "100 LB", m = 100, j = 5000},
+    {n = "1 TON", m = 5000, j = 200000},
+    {n = "10 TON", m = 500000, j = 2000000},
+    {n = "100 TON", m = 10000000, j = 10000000},
+    {n = "1 K TON", m = 100000000, j = 200000000},
+    {n = "10 K TON", m = 1000000000, j = 1000000000},
+    {n = "100 K TON", m = 10000000000, j = 10000000000},
+    {n = "1 M TON", m = 100000000000, j = 100000000000},
+    {n = "10 M TON", m = 1e12, j = 1e12},
+    {n = "1 B TON", m = 1e13, j = 1e13},
+    {n = "100 B TON", m = 2.56e28, j = 1.54e28},
+    {n = "10 T TON", m = 0, j = 6e26},
+    {n = "1 Qa TON", m = 1.68e32, j = 2.221e31},
+    {n = "100 Qa TON", m = 4.288e33, j = 8.48e31},
+    {n = "10 Qi TON", m = 1.082e34, j = 3.226e33},
+    {n = "1 Sx TON", m = 2.823e36, j = 1.229e36},
+    {n = "100 Sx TON", m = 7.02e37, j = 4.683e37},
+    {n = "10 Sp TON", m = 1.852e39, j = 1.785e39},
+    {n = "10 Oc TON", m = 4.744e39, j = 6.8e39}
 }
 
-local w2 = {
-	{"K",1e3},{"M",1e6},{"B",1e9},{"T",1e12},{"Qa",1e15},{"Qi",1e18},
-	{"Sx",1e21},{"Sp",1e24},{"Oc",1e27},{"No",1e30},{"Dc",1e33},{"Ud",1e36},{"Dd",1e39}
+local uo = {
+    {"K", 1e3}, {"M", 1e6}, {"B", 1e9}, {"T", 1e12}, {"Qa", 1e15}, {"Qi", 1e18},
+    {"Sx", 1e21}, {"Sp", 1e24}, {"Oc", 1e27}, {"No", 1e30}, {"Dc", 1e33},
+    {"Ud", 1e36}, {"Dd", 1e39}
 }
 
-local s1,s2,s3,s4,s5,s6,s7,s8,wfc
-s1,s2,s3,s4,s5,s6,s7,s8,wfc = nil,nil,nil,nil,false,false,false,false,nil
-
-local function f1(v)
-	if not v then return 0 end
-	v = tostring(v):gsub("%s+","")
-	local n,u = v:match("([%d%.]+)(%a*)$")
-	n = tonumber(n) or 0
-	if u == "" then return n end
-	for _,x in ipairs(w2) do if x[1]==u then return n*x[2] end end
-	return n
+local function ctn(s)
+    if not s then return 0 end
+    local w = tostring(s):gsub("%s+", "")
+    local w1, w2 = w:match("([%d%.]+)(%a*)$")
+    local w3 = tonumber(w1) or 0
+    if w2 == "" then return w3 end
+    for _, w4 in ipairs(uo) do
+        if w4[1] == w2 then return w3 * w4[2] end
+    end
+    return w3
 end
 
-local w3 = {
-	FistStrength=nf:WaitForChild("FSTxt"),BodyToughness=nf:WaitForChild("BTTxt"),
-	PsychicPower=nf:WaitForChild("PPTxt"),JumpForce=nf:WaitForChild("JFTxt"),
-	MovementSpeed=nf:WaitForChild("MSTxt")
+local sp = {
+    FistStrength = inf:WaitForChild("FSTxt"),
+    BodyToughness = inf:WaitForChild("BTTxt"),
+    PsychicPower = inf:WaitForChild("PPTxt"),
+    JumpForce = inf:WaitForChild("JFTxt"),
+    MovementSpeed = inf:WaitForChild("MSTxt")
 }
 
-local w4 = {
-	FistStrength="Fist Strength",BodyToughness="Body Toughness",
-	PsychicPower="Psychic Power",JumpForce="Jump Force",MovementSpeed="Movement Speed"
-}
-
-local function f2(tp)
-	local o = w3[tp]
-	if not o then return 0 end
-	return f1(o.Text)
+local function gcs(w)
+    local w1 = sp[w]
+    if not w1 then return 0 end
+    return ctn(w1.Text)
 end
 
-local function f3(tp, pw)
-	local d = w[tp]
-	if not d then return nil end
-	local b,br = nil,-1
-	for n,v in pairs(d) do
-		local rq = f1(v.req)
-		if pw >= rq and rq > br then b,br = n,rq end
-	end
-	return b,br
+local function fba(w, w2)
+    local w3 = ar[w]
+    if not w3 then return nil end
+    local w4, w5 = nil, -1
+    for w6, w7 in pairs(w3) do
+        local w8 = ctn(w7.req)
+        if w2 >= w8 and w8 > w5 then
+            w4 = w6
+            w5 = w8
+        end
+    end
+    return w4, w5
 end
 
-local function f4(tp, nm)
-	local fd = ap:FindFirstChild(tp)
-	if not fd then return nil end
-	return fd:FindFirstChild(nm)
+local function gao(w, w2)
+    local w3 = ap:FindFirstChild(w)
+    if not w3 then return nil end
+    return w3:FindFirstChild(w2)
 end
 
-local function f5(ar)
-	if not ar then return false end
-	local ch = pl.Character
-	if not ch then return false end
-	local hr = ch:FindFirstChild("HumanoidRootPart")
-	if not hr then return false end
-	local cf
-	if ar:IsA("BasePart") then cf = ar.CFrame
-	else
-		local pt = ar.PrimaryPart or ar:FindFirstChildWhichIsA("BasePart")
-		if pt then cf = pt.CFrame end
-	end
-	if cf then
-		hr.CFrame = cf + Vector3.new(0,5,0)
-		return true, cf + Vector3.new(0,5,0)
-	end
-	return false
+local function tta(w)
+    if not w then return false end
+    local w1 = p.Character
+    if not w1 then return false end
+    local w2 = w1:FindFirstChild("HumanoidRootPart")
+    if not w2 then return false end
+    local w3
+    if w:IsA("BasePart") then
+        w3 = w.CFrame
+    else
+        local w4 = w.PrimaryPart or w:FindFirstChildWhichIsA("BasePart")
+        if w4 then w3 = w4.CFrame end
+    end
+    if w3 then
+        w2.CFrame = w3 + Vector3.new(0, 5, 0)
+        return true, w3 + Vector3.new(0, 5, 0)
+    end
+    return false
 end
 
-local function f6()
-	local ms = f2("MovementSpeed")
-	local jf = f2("JumpForce")
-	local wi,idx = nil,1
-	for i,v in ipairs(w1) do
-		if ms >= v.ms and jf >= v.jf then wi,idx = v,i else break end
-	end
-	if wi then rs:FireServer({{"EquipWeight_Request",idx}}) end
+local function ebw()
+    local w = gcs("MovementSpeed")
+    local w1 = gcs("JumpForce")
+    local w2, w3 = nil, 1
+    for w4, w5 in ipairs(wl) do
+        if w >= w5.m and w1 >= w5.j then
+            w2 = w5
+            w3 = w4
+        else
+            break
+        end
+    end
+    if w2 then
+        re:FireServer(unpack({{"EquipWeight_Request", w3}}))
+    end
 end
 
-local c = {
-	Keybind = Enum.KeyCode.G,
-	SelectedTraining = nil,
-	AutoWeightActive = false,
-	AutoSaveEnabled = true,
-	SavedPosition = nil,
-	FarmSettings = {}
-}
-local c1 = "eSPTS_Config.json"
+local w9 = sg:FindFirstChild("eSPTSUI")
+if w9 then w9:Destroy() end
 
-local function f8()
-	if not writefile then return end
-	local sc = nil
-	if s4 then
-		sc = {
-			X=s4.X,Y=s4.Y,Z=s4.Z,
-			RX=s4.RightVector.X,RY=s4.RightVector.Y,RZ=s4.RightVector.Z,
-			UX=s4.UpVector.X,UY=s4.UpVector.Y,UZ=s4.UpVector.Z,
-			BX=s4.LookVector.X,BY=s4.LookVector.Y,BZ=s4.LookVector.Z
-		}
-	end
-	c.FarmSettings = {
-		FistStrength=f2("FistStrength"),BodyToughness=f2("BodyToughness"),
-		PsychicPower=f2("PsychicPower"),JumpForce=f2("JumpForce"),
-		MovementSpeed=f2("MovementSpeed")
-	}
-	local d = hs:JSONEncode({
-		Keybind=c.Keybind.Name,SelectedTraining=s1,
-		AutoWeightActive=s7,AutoSaveEnabled=c.AutoSaveEnabled,
-		SavedPosition=sc,FarmSettings=c.FarmSettings,
-		TrainingEnabled=(s1~=nil)
-	})
-	writefile(c1,d)
+local mg = Instance.new("ScreenGui")
+mg.Name = "eSPTSUI"
+mg.ResetOnSpawn = false
+mg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+mg.Parent = sg
+
+local tgb = Instance.new("TextButton")
+tgb.Name = "ToggleButton"
+tgb.Size = UDim2.new(0, 80, 0, 80)
+tgb.Position = UDim2.new(0, 20, 0.5, -40)
+tgb.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+tgb.BorderSizePixel = 0
+tgb.Text = ""
+tgb.AutoButtonColor = false
+tgb.Parent = mg
+
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 12) w.Parent = tgb end
+
+local tgl = Instance.new("TextLabel")
+tgl.Size = UDim2.new(1, 0, 1, 0)
+tgl.BackgroundTransparency = 1
+tgl.Text = "eSPTS"
+tgl.TextColor3 = Color3.fromRGB(100, 200, 255)
+tgl.Font = Enum.Font.GothamBold
+tgl.TextSize = 20
+tgl.Parent = tgb
+
+local mf = Instance.new("Frame")
+mf.Name = "MainFrame"
+mf.Size = UDim2.new(0, 600, 0, 480)
+mf.Position = UDim2.new(0.5, 0, 0.5, 0)
+mf.AnchorPoint = Vector2.new(0.5, 0.5)
+mf.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+mf.BorderSizePixel = 0
+mf.Visible = false
+mf.Parent = mg
+
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 16) w.Parent = mf end
+
+local tp = Instance.new("Frame")
+tp.Name = "TopBar"
+tp.Size = UDim2.new(1, 0, 0, 50)
+tp.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+tp.BorderSizePixel = 0
+tp.Parent = mf
+
+do
+    local w = Instance.new("UICorner")
+    w.CornerRadius = UDim.new(0, 16)
+    w.Parent = tp
+    local w2 = Instance.new("Frame")
+    w2.Size = UDim2.new(1, 0, 0, 16)
+    w2.Position = UDim2.new(0, 0, 1, -16)
+    w2.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+    w2.BorderSizePixel = 0
+    w2.Parent = tp
 end
 
-local function f9()
-	if not readfile or not isfile or not isfile(c1) then return false end
-	local ok,d = pcall(function() return hs:JSONDecode(readfile(c1)) end)
-	if ok and d then
-		if d.Keybind and Enum.KeyCode[d.Keybind] then c.Keybind=Enum.KeyCode[d.Keybind]
-		else c.Keybind=Enum.KeyCode.G end
-		c.SelectedTraining = d.SelectedTraining
-		c.AutoWeightActive = d.AutoWeightActive or false
-		c.AutoSaveEnabled = d.AutoSaveEnabled ~= nil and d.AutoSaveEnabled or true
-		c.FarmSettings = d.FarmSettings or {}
-		c.TrainingEnabled = d.TrainingEnabled or false
-		if d.SavedPosition then
-			local sp = d.SavedPosition
-			s4 = CFrame.fromMatrix(
-				Vector3.new(sp.X,sp.Y,sp.Z),
-				Vector3.new(sp.RX,sp.RY,sp.RZ),
-				Vector3.new(sp.UX,sp.UY,sp.UZ),
-				Vector3.new(sp.BX,sp.BY,sp.BZ)
-			)
-		end
-		return true
-	end
-	return false
+local tpl = Instance.new("TextLabel")
+tpl.Size = UDim2.new(0, 200, 1, 0)
+tpl.Position = UDim2.new(0, 20, 0, 0)
+tpl.BackgroundTransparency = 1
+tpl.Text = "eSPTS"
+tpl.TextColor3 = Color3.fromRGB(100, 200, 255)
+tpl.Font = Enum.Font.GothamBold
+tpl.TextSize = 20
+tpl.TextXAlignment = Enum.TextXAlignment.Left
+tpl.Parent = tp
+
+local cb = Instance.new("TextButton")
+cb.Size = UDim2.new(0, 40, 0, 40)
+cb.Position = UDim2.new(1, -45, 0, 5)
+cb.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+cb.BorderSizePixel = 0
+cb.Text = "X"
+cb.TextColor3 = Color3.fromRGB(255, 100, 100)
+cb.Font = Enum.Font.GothamBold
+cb.TextSize = 18
+cb.AutoButtonColor = false
+cb.Parent = tp
+
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 8) w.Parent = cb end
+
+local tcg = Instance.new("Frame")
+tcg.Name = "TabContainer"
+tcg.Size = UDim2.new(1, -40, 0, 40)
+tcg.Position = UDim2.new(0, 20, 0, 60)
+tcg.BackgroundTransparency = 1
+tcg.Parent = mf
+
+do
+    local w = Instance.new("UIListLayout")
+    w.FillDirection = Enum.FillDirection.Horizontal
+    w.Padding = UDim.new(0, 10)
+    w.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    w.Parent = tcg
 end
-
-local function f10()
-	if c.AutoSaveEnabled then f8() end
-end
-
-local function mk(par, lbl, df, cb)
-	local fr = Instance.new("Frame")
-	fr.Size = UDim2.new(1,0,0,50)
-	fr.BackgroundColor3 = Color3.fromRGB(25,25,35)
-	fr.BorderSizePixel = 0
-	fr.Parent = par
-	Instance.new("UICorner",fr).CornerRadius = UDim.new(0,10)
-	local lb = Instance.new("TextLabel")
-	lb.Size = UDim2.new(1,-80,1,0)
-	lb.Position = UDim2.new(0,15,0,0)
-	lb.BackgroundTransparency = 1
-	lb.Text = lbl
-	lb.TextColor3 = Color3.fromRGB(200,200,210)
-	lb.Font = Enum.Font.GothamSemibold
-	lb.TextSize = 14
-	lb.TextXAlignment = Enum.TextXAlignment.Left
-	lb.Parent = fr
-	local tk = Instance.new("Frame")
-	tk.Size = UDim2.new(0,50,0,26)
-	tk.Position = UDim2.new(1,-65,0.5,-13)
-	tk.BackgroundColor3 = df and Color3.fromRGB(50,150,100) or Color3.fromRGB(80,30,30)
-	tk.BorderSizePixel = 0
-	tk.Parent = fr
-	Instance.new("UICorner",tk).CornerRadius = UDim.new(1,0)
-	local kn = Instance.new("Frame")
-	kn.Size = UDim2.new(0,20,0,20)
-	kn.Position = df and UDim2.new(1,-22,0.5,-10) or UDim2.new(0,3,0.5,-10)
-	kn.BackgroundColor3 = Color3.fromRGB(255,255,255)
-	kn.BorderSizePixel = 0
-	kn.Parent = tk
-	Instance.new("UICorner",kn).CornerRadius = UDim.new(1,0)
-	local bt = Instance.new("TextButton")
-	bt.Size = UDim2.new(1,0,1,0)
-	bt.BackgroundTransparency = 1
-	bt.Text = ""
-	bt.AutoButtonColor = false
-	bt.Parent = fr
-	local on = df
-	local function ud()
-		if on then
-			tk.BackgroundColor3 = Color3.fromRGB(50,150,100)
-			t:Create(kn,TweenInfo.new(0.2),{Position=UDim2.new(1,-22,0.5,-10)}):Play()
-		else
-			tk.BackgroundColor3 = Color3.fromRGB(80,30,30)
-			t:Create(kn,TweenInfo.new(0.2),{Position=UDim2.new(0,3,0.5,-10)}):Play()
-		end
-	end
-	bt.MouseButton1Click:Connect(function()
-		on = not on
-		ud()
-		if cb then cb(on) end
-	end)
-	return {fr=fr,sd=function(v) on=v ud() end,gd=function() return on end,ud=ud}
-end
-
-local ex = sg:FindFirstChild("eSPTSUI")
-if ex then ex:Destroy() end
-
-local g = Instance.new("ScreenGui")
-g.Name = "eSPTSUI"
-g.ResetOnSpawn = false
-g.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-g.Parent = sg
-
-local g1 = Instance.new("TextButton")
-g1.Name = "ToggleButton"
-g1.Size = UDim2.new(0,80,0,80)
-g1.Position = UDim2.new(0,20,0.5,-40)
-g1.BackgroundColor3 = Color3.fromRGB(20,20,25)
-g1.BorderSizePixel = 0
-g1.Text = ""
-g1.AutoButtonColor = false
-g1.Parent = g
-Instance.new("UICorner",g1).CornerRadius = UDim.new(0,12)
-
-local gl = Instance.new("TextLabel")
-gl.Size = UDim2.new(1,0,1,0)
-gl.BackgroundTransparency = 1
-gl.Text = "eSPTS"
-gl.TextColor3 = Color3.fromRGB(100,200,255)
-gl.Font = Enum.Font.GothamBold
-gl.TextSize = 20
-gl.Parent = g1
-
-local g2 = Instance.new("Frame")
-g2.Name = "MainFrame"
-g2.Size = UDim2.new(0,600,0,480)
-g2.Position = UDim2.new(0.5,0,0.5,0)
-g2.AnchorPoint = Vector2.new(0.5,0.5)
-g2.BackgroundColor3 = Color3.fromRGB(15,15,20)
-g2.BorderSizePixel = 0
-g2.Visible = false
-g2.Parent = g
-Instance.new("UICorner",g2).CornerRadius = UDim.new(0,16)
-
-local tb = Instance.new("Frame")
-tb.Size = UDim2.new(1,0,0,50)
-tb.BackgroundColor3 = Color3.fromRGB(20,20,28)
-tb.BorderSizePixel = 0
-tb.Parent = g2
-Instance.new("UICorner",tb).CornerRadius = UDim.new(0,16)
-
-local tf = Instance.new("Frame")
-tf.Size = UDim2.new(1,0,0,16)
-tf.Position = UDim2.new(0,0,1,-16)
-tf.BackgroundColor3 = Color3.fromRGB(20,20,28)
-tf.BorderSizePixel = 0
-tf.Parent = tb
-
-local tl = Instance.new("TextLabel")
-tl.Size = UDim2.new(0,200,1,0)
-tl.Position = UDim2.new(0,20,0,0)
-tl.BackgroundTransparency = 1
-tl.Text = "eSPTS"
-tl.TextColor3 = Color3.fromRGB(100,200,255)
-tl.Font = Enum.Font.GothamBold
-tl.TextSize = 20
-tl.TextXAlignment = Enum.TextXAlignment.Left
-tl.Parent = tb
-
-local g3 = Instance.new("TextButton")
-g3.Size = UDim2.new(0,40,0,40)
-g3.Position = UDim2.new(1,-45,0,5)
-g3.BackgroundColor3 = Color3.fromRGB(35,35,45)
-g3.BorderSizePixel = 0
-g3.Text = "X"
-g3.TextColor3 = Color3.fromRGB(255,100,100)
-g3.Font = Enum.Font.GothamBold
-g3.TextSize = 18
-g3.AutoButtonColor = false
-g3.Parent = tb
-Instance.new("UICorner",g3).CornerRadius = UDim.new(0,8)
-
-local tc = Instance.new("Frame")
-tc.Size = UDim2.new(1,-40,0,40)
-tc.Position = UDim2.new(0,20,0,60)
-tc.BackgroundTransparency = 1
-tc.Parent = g2
-
-local tcl = Instance.new("UIListLayout")
-tcl.FillDirection = Enum.FillDirection.Horizontal
-tcl.Padding = UDim.new(0,10)
-tcl.HorizontalAlignment = Enum.HorizontalAlignment.Center
-tcl.Parent = tc
 
 local cf = Instance.new("Frame")
-cf.Size = UDim2.new(1,-40,1,-140)
-cf.Position = UDim2.new(0,20,0,120)
+cf.Name = "ContentFrame"
+cf.Size = UDim2.new(1, -40, 1, -140)
+cf.Position = UDim2.new(0, 20, 0, 120)
 cf.BackgroundTransparency = 1
-cf.Parent = g2
+cf.Parent = mf
 
-local tn = {"Auto Farm","Auto Weights","Position Man","Configs"}
-local tbs = {}
+local tbs = {"Auto Farm", "Auto Weights", "Position Man", "Configs"}
+local tbn = {}
 local tcs = {}
+local sv = nil
 
-for i,nm in ipairs(tn) do
-	local bt = Instance.new("TextButton")
-	bt.Size = UDim2.new(0,130,1,0)
-	bt.BackgroundColor3 = Color3.fromRGB(25,25,35)
-	bt.BorderSizePixel = 0
-	bt.Text = nm
-	bt.TextColor3 = Color3.fromRGB(150,150,160)
-	bt.Font = Enum.Font.GothamSemibold
-	bt.TextSize = 14
-	bt.AutoButtonColor = false
-	bt.Parent = tc
-	Instance.new("UICorner",bt).CornerRadius = UDim.new(0,8)
-	tbs[nm] = bt
-	local ct = Instance.new("ScrollingFrame")
-	ct.Size = UDim2.new(1,0,1,0)
-	ct.BackgroundTransparency = 1
-	ct.BorderSizePixel = 0
-	ct.ScrollBarThickness = 6
-	ct.ScrollBarImageColor3 = Color3.fromRGB(100,200,255)
-	ct.Visible = (i==1)
-	ct.CanvasSize = UDim2.new(0,0,0,0)
-	ct.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	ct.Parent = cf
-	local cl = Instance.new("UIListLayout")
-	cl.Padding = UDim.new(0,12)
-	cl.SortOrder = Enum.SortOrder.LayoutOrder
-	cl.Parent = ct
-	tcs[nm] = ct
+for w, w2 in ipairs(tbs) do
+    local w3 = Instance.new("TextButton")
+    w3.Size = UDim2.new(0, 130, 1, 0)
+    w3.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    w3.BorderSizePixel = 0
+    w3.Text = w2
+    w3.TextColor3 = Color3.fromRGB(150, 150, 160)
+    w3.Font = Enum.Font.GothamSemibold
+    w3.TextSize = 14
+    w3.AutoButtonColor = false
+    w3.Parent = tcg
+    do local w4 = Instance.new("UICorner") w4.CornerRadius = UDim.new(0, 8) w4.Parent = w3 end
+    tbn[w2] = w3
+    local w5 = Instance.new("ScrollingFrame")
+    w5.Size = UDim2.new(1, 0, 1, 0)
+    w5.BackgroundTransparency = 1
+    w5.BorderSizePixel = 0
+    w5.ScrollBarThickness = 6
+    w5.ScrollBarImageColor3 = Color3.fromRGB(100, 200, 255)
+    w5.Visible = (w == 1)
+    w5.CanvasSize = UDim2.new(0, 0, 0, 0)
+    w5.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    w5.Parent = cf
+    do
+        local w6 = Instance.new("UIListLayout")
+        w6.Padding = UDim.new(0, 12)
+        w6.SortOrder = Enum.SortOrder.LayoutOrder
+        w6.Parent = w5
+    end
+    tcs[w2] = w5
 end
 
-local function f7(nm)
-	for n,b in pairs(tbs) do
-		if n==nm then
-			b.BackgroundColor3 = Color3.fromRGB(100,200,255)
-			b.TextColor3 = Color3.fromRGB(255,255,255)
-		else
-			b.BackgroundColor3 = Color3.fromRGB(25,25,35)
-			b.TextColor3 = Color3.fromRGB(150,150,160)
-		end
-	end
-	for n,x in pairs(tcs) do x.Visible = (n==nm) end
+local function sw(w)
+    for w2, w3 in pairs(tbn) do
+        if w2 == w then
+            w3.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+            w3.TextColor3 = Color3.fromRGB(255, 255, 255)
+        else
+            w3.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+            w3.TextColor3 = Color3.fromRGB(150, 150, 160)
+        end
+    end
+    for w2, w3 in pairs(tcs) do
+        w3.Visible = (w2 == w)
+    end
 end
 
-for n,b in pairs(tbs) do
-	b.MouseButton1Click:Connect(function() f7(n) end)
-	b.MouseEnter:Connect(function()
-		if b.BackgroundColor3 ~= Color3.fromRGB(100,200,255) then
-			t:Create(b,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(35,35,45)}):Play()
-		end
-	end)
-	b.MouseLeave:Connect(function()
-		if b.BackgroundColor3 ~= Color3.fromRGB(100,200,255) then
-			t:Create(b,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(25,25,35)}):Play()
-		end
-	end)
+for w2, w3 in pairs(tbn) do
+    w3.MouseButton1Click:Connect(function() sw(w2) end)
+    w3.MouseEnter:Connect(function()
+        if w3.BackgroundColor3 ~= Color3.fromRGB(100, 200, 255) then
+            tw:Create(w3, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+        end
+    end)
+    w3.MouseLeave:Connect(function()
+        if w3.BackgroundColor3 ~= Color3.fromRGB(100, 200, 255) then
+            tw:Create(w3, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+        end
+    end)
 end
 
-f7("Auto Farm")
+sw("Auto Farm")
 
 local fc = tcs["Auto Farm"]
+local st = nil
+local ao = nil
+local ac = nil
 
 local ib = Instance.new("Frame")
-ib.Size = UDim2.new(1,0,0,70)
-ib.BackgroundColor3 = Color3.fromRGB(25,25,35)
+ib.Size = UDim2.new(1, 0, 0, 70)
+ib.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 ib.BorderSizePixel = 0
 ib.Parent = fc
-Instance.new("UICorner",ib).CornerRadius = UDim.new(0,10)
+
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = ib end
 
 local it = Instance.new("TextLabel")
-it.Size = UDim2.new(1,-20,1,-20)
-it.Position = UDim2.new(0,10,0,10)
+it.Size = UDim2.new(1, -20, 1, -20)
+it.Position = UDim2.new(0, 10, 0, 10)
 it.BackgroundTransparency = 1
 it.Text = "No active training"
-it.TextColor3 = Color3.fromRGB(200,200,210)
+it.TextColor3 = Color3.fromRGB(200, 200, 210)
 it.Font = Enum.Font.Gotham
 it.TextSize = 14
 it.TextWrapped = true
@@ -455,65 +410,185 @@ it.TextXAlignment = Enum.TextXAlignment.Left
 it.TextYAlignment = Enum.TextYAlignment.Top
 it.Parent = ib
 
-local ct2 = {"FistStrength","BodyToughness","PsychicPower","JumpForce","MovementSpeed"}
-local ft = {}
+local dp = {
+    FistStrength = "Fist Strength",
+    BodyToughness = "Body Toughness",
+    PsychicPower = "Psychic Power",
+    JumpForce = "Jump Force",
+    MovementSpeed = "Movement Speed"
+}
 
-for _,cat in ipairs(ct2) do
-	local tg = mk(fc, w4[cat], false, function(on)
-		if on then
-			for c2,t2 in pairs(ft) do
-				if c2~=cat then t2.sd(false) end
-			end
-			s1 = cat
-			local pw = f2(cat)
-			local an = f3(cat, pw)
-			if not an then
-				it.Text = w4[cat].." — No available area"
-				s3 = nil
-				f10()
-				return
-			end
-			local ao = f4(cat, an)
-			s2 = ao
-			if not ao then
-				it.Text = "Area '"..an.."' not found!"
-				s3 = nil
-				f10()
-				return
-			end
-			local ok,cf2 = f5(ao)
-			if ok then
-				s3 = cf2
-				it.Text = w4[cat].." — Area: "..an.." (req "..w[cat][an].req..")"
-			else
-				it.Text = "Teleport failed!"
-			end
-		else
-			s1 = nil
-			s2 = nil
-			s3 = nil
-			it.Text = "No active training"
-		end
-		f10()
-	end)
-	ft[cat] = tg
+local cg = {"FistStrength", "BodyToughness", "PsychicPower", "JumpForce", "MovementSpeed"}
+local fb = {}
+local aw = false
+
+local cfg = {
+    Keybind = Enum.KeyCode.G,
+    SelectedTraining = nil,
+    AutoWeightActive = false,
+    AutoSaveEnabled = true,
+    SavedPosition = nil,
+    FarmSettings = {},
+    TrainingEnabled = false
+}
+
+local cfn = "eSPTS_Config.json"
+
+local function sc()
+    if writefile then
+        local w = nil
+        if sv then
+            w = {
+                X = sv.X, Y = sv.Y, Z = sv.Z,
+                RX = sv.RightVector.X, RY = sv.RightVector.Y, RZ = sv.RightVector.Z,
+                UX = sv.UpVector.X, UY = sv.UpVector.Y, UZ = sv.UpVector.Z,
+                BX = sv.LookVector.X, BY = sv.LookVector.Y, BZ = sv.LookVector.Z
+            }
+        end
+        cfg.FarmSettings = {
+            FistStrength = gcs("FistStrength"),
+            BodyToughness = gcs("BodyToughness"),
+            PsychicPower = gcs("PsychicPower"),
+            JumpForce = gcs("JumpForce"),
+            MovementSpeed = gcs("MovementSpeed")
+        }
+        local w2 = hs:JSONEncode({
+            Keybind = cfg.Keybind.Name,
+            SelectedTraining = st,
+            AutoWeightActive = aw,
+            AutoSaveEnabled = cfg.AutoSaveEnabled,
+            SavedPosition = w,
+            FarmSettings = cfg.FarmSettings,
+            TrainingEnabled = (st ~= nil)
+        })
+        writefile(cfn, w2)
+    end
+end
+
+local function lc()
+    if readfile and isfile and isfile(cfn) then
+        local w, w2 = pcall(function()
+            return hs:JSONDecode(readfile(cfn))
+        end)
+        if w and w2 then
+            if w2.Keybind and Enum.KeyCode[w2.Keybind] then
+                cfg.Keybind = Enum.KeyCode[w2.Keybind]
+            else
+                cfg.Keybind = Enum.KeyCode.G
+            end
+            cfg.SelectedTraining = w2.SelectedTraining
+            cfg.AutoWeightActive = w2.AutoWeightActive or false
+            cfg.AutoSaveEnabled = w2.AutoSaveEnabled ~= nil and w2.AutoSaveEnabled or true
+            cfg.FarmSettings = w2.FarmSettings or {}
+            cfg.TrainingEnabled = w2.TrainingEnabled or false
+            if w2.SavedPosition then
+                local w3 = w2.SavedPosition
+                sv = CFrame.fromMatrix(
+                    Vector3.new(w3.X, w3.Y, w3.Z),
+                    Vector3.new(w3.RX, w3.RY, w3.RZ),
+                    Vector3.new(w3.UX, w3.UY, w3.UZ),
+                    Vector3.new(w3.BX, w3.BY, w3.BZ)
+                )
+                if pt then pt.Text = "Position loaded from config!" end
+            end
+            return true
+        end
+    end
+    return false
+end
+
+local function soc()
+    if cfg.AutoSaveEnabled then sc() end
+end
+
+for _, w in ipairs(cg) do
+    local w1 = Instance.new("Frame")
+    w1.Size = UDim2.new(1, 0, 0, 55)
+    w1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    w1.BorderSizePixel = 0
+    w1.Parent = fc
+    do local w2 = Instance.new("UICorner") w2.CornerRadius = UDim.new(0, 10) w2.Parent = w1 end
+    local w3 = Instance.new("TextButton")
+    w3.Size = UDim2.new(1, 0, 1, 0)
+    w3.BackgroundTransparency = 1
+    w3.Text = dp[w]
+    w3.TextColor3 = Color3.fromRGB(200, 200, 210)
+    w3.Font = Enum.Font.GothamSemibold
+    w3.TextSize = 16
+    w3.AutoButtonColor = false
+    w3.Parent = w1
+    fb[w] = {f = w1, b = w3}
+    w3.MouseButton1Click:Connect(function()
+        if st == w then
+            st = nil
+            ao = nil
+            ac = nil
+            w1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+            w3.TextColor3 = Color3.fromRGB(200, 200, 210)
+            it.Text = "No active training"
+            soc()
+            return
+        end
+        if st then
+            fb[st].f.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+            fb[st].b.TextColor3 = Color3.fromRGB(200, 200, 210)
+        end
+        st = w
+        w1.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        w3.TextColor3 = Color3.fromRGB(255, 255, 255)
+        local w4 = gcs(w)
+        local w5 = fba(w, w4)
+        if not w5 then
+            it.Text = dp[w] .. " \226\128\148 No available area"
+            ac = nil
+            soc()
+            return
+        end
+        local w6 = gao(w, w5)
+        ao = w6
+        if not w6 then
+            it.Text = "Area '" .. w5 .. "' not found!"
+            ac = nil
+            soc()
+            return
+        end
+        local w7, w8 = tta(w6)
+        if w7 then
+            ac = w8
+            it.Text = dp[w] .. " \226\128\148 Area: " .. w5 .. " (req " .. ar[w][w5].req .. ")"
+        else
+            it.Text = "Teleport failed!"
+        end
+        soc()
+    end)
+    w3.MouseEnter:Connect(function()
+        if st ~= w then
+            tw:Create(w1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+        end
+    end)
+    w3.MouseLeave:Connect(function()
+        if st ~= w then
+            tw:Create(w1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+        end
+    end)
 end
 
 local wc = tcs["Auto Weights"]
 
 local wib = Instance.new("Frame")
-wib.Size = UDim2.new(1,0,0,70)
-wib.BackgroundColor3 = Color3.fromRGB(25,25,35)
+wib.Size = UDim2.new(1, 0, 0, 70)
+wib.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 wib.BorderSizePixel = 0
 wib.Parent = wc
-Instance.new("UICorner",wib).CornerRadius = UDim.new(0,10)
+
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = wib end
 
 local wit = Instance.new("TextLabel")
-wit.Size = UDim2.new(1,-20,1,-20)
-wit.Position = UDim2.new(0,10,0,10)
+wit.Size = UDim2.new(1, -20, 1, -20)
+wit.Position = UDim2.new(0, 10, 0, 10)
 wit.BackgroundTransparency = 1
 wit.Text = "Auto weight system inactive"
-wit.TextColor3 = Color3.fromRGB(200,200,210)
+wit.TextColor3 = Color3.fromRGB(200, 200, 210)
 wit.Font = Enum.Font.Gotham
 wit.TextSize = 14
 wit.TextWrapped = true
@@ -521,329 +596,401 @@ wit.TextXAlignment = Enum.TextXAlignment.Left
 wit.TextYAlignment = Enum.TextYAlignment.Top
 wit.Parent = wib
 
-local function f12()
-	if wfc then wfc:Disconnect() wfc = nil end
-	wfc = r.Heartbeat:Connect(function()
-		if not s7 then if wfc then wfc:Disconnect() wfc = nil end return end
-		rs:FireServer({{"Add_MS_Request"}})
-		rs:FireServer({{"Add_JF_Request"}})
-	end)
+local wbf = Instance.new("Frame")
+wbf.Size = UDim2.new(1, 0, 0, 55)
+wbf.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+wbf.BorderSizePixel = 0
+wbf.Parent = wc
+
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = wbf end
+
+local wbt = Instance.new("TextButton")
+wbt.Size = UDim2.new(1, 0, 1, 0)
+wbt.BackgroundTransparency = 1
+wbt.Text = "Start Auto Weight"
+wbt.TextColor3 = Color3.fromRGB(200, 200, 210)
+wbt.Font = Enum.Font.GothamSemibold
+wbt.TextSize = 16
+wbt.AutoButtonColor = false
+wbt.Parent = wbf
+
+local wfc = nil
+
+local function swf()
+    if wfc then wfc:Disconnect() wfc = nil end
+    wfc = rs.Heartbeat:Connect(function()
+        if not aw then
+            if wfc then wfc:Disconnect() wfc = nil end
+            return
+        end
+        re:FireServer(unpack({{"Add_MS_Request"}}))
+        re:FireServer(unpack({{"Add_JF_Request"}}))
+    end)
 end
 
-local wt = mk(wc, "Auto Weight", false, function(on)
-	s7 = on
-	c.AutoWeightActive = on
-	if on then
-		wit.Text = "Auto Weight active — farming MS and JF"
-		f6()
-		f12()
-	else
-		wit.Text = "Auto weight system inactive"
-		if wfc then wfc:Disconnect() wfc = nil end
-	end
-	f10()
+local function uwb()
+    if aw then
+        wbf.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        wbt.TextColor3 = Color3.fromRGB(255, 255, 255)
+        wbt.Text = "Stop Auto Weight"
+        wit.Text = "Auto Weight active \226\128\148 farming MS and JF automatically"
+        ebw()
+        swf()
+    else
+        wbf.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+        wbt.TextColor3 = Color3.fromRGB(200, 200, 210)
+        wbt.Text = "Start Auto Weight"
+        wit.Text = "Auto weight system inactive"
+        if wfc then wfc:Disconnect() wfc = nil end
+    end
+end
+
+wbt.MouseButton1Click:Connect(function()
+    aw = not aw
+    cfg.AutoWeightActive = aw
+    uwb()
+    soc()
+end)
+
+wbt.MouseEnter:Connect(function()
+    if not aw then
+        tw:Create(wbf, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
+    end
+end)
+
+wbt.MouseLeave:Connect(function()
+    if not aw then
+        tw:Create(wbf, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+    end
 end)
 
 local pc = tcs["Position Man"]
 
 local pib = Instance.new("Frame")
-pib.Size = UDim2.new(1,0,0,70)
-pib.BackgroundColor3 = Color3.fromRGB(25,25,35)
+pib.Size = UDim2.new(1, 0, 0, 70)
+pib.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 pib.BorderSizePixel = 0
 pib.Parent = pc
-Instance.new("UICorner",pib).CornerRadius = UDim.new(0,10)
 
-local pit = Instance.new("TextLabel")
-pit.Size = UDim2.new(1,-20,1,-20)
-pit.Position = UDim2.new(0,10,0,10)
-pit.BackgroundTransparency = 1
-pit.Text = "No position saved"
-pit.TextColor3 = Color3.fromRGB(200,200,210)
-pit.Font = Enum.Font.Gotham
-pit.TextSize = 14
-pit.TextWrapped = true
-pit.TextXAlignment = Enum.TextXAlignment.Left
-pit.TextYAlignment = Enum.TextYAlignment.Top
-pit.Parent = pib
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = pib end
 
-local p1f = Instance.new("Frame")
-p1f.Size = UDim2.new(1,0,0,55)
-p1f.BackgroundColor3 = Color3.fromRGB(25,25,35)
-p1f.BorderSizePixel = 0
-p1f.Parent = pc
-Instance.new("UICorner",p1f).CornerRadius = UDim.new(0,10)
+local pt = Instance.new("TextLabel")
+pt.Size = UDim2.new(1, -20, 1, -20)
+pt.Position = UDim2.new(0, 10, 0, 10)
+pt.BackgroundTransparency = 1
+pt.Text = "No position saved"
+pt.TextColor3 = Color3.fromRGB(200, 200, 210)
+pt.Font = Enum.Font.Gotham
+pt.TextSize = 14
+pt.TextWrapped = true
+pt.TextXAlignment = Enum.TextXAlignment.Left
+pt.TextYAlignment = Enum.TextYAlignment.Top
+pt.Parent = pib
 
-local p1b = Instance.new("TextButton")
-p1b.Size = UDim2.new(1,0,1,0)
-p1b.BackgroundTransparency = 1
-p1b.Text = "Save Current Position"
-p1b.TextColor3 = Color3.fromRGB(200,200,210)
-p1b.Font = Enum.Font.GothamSemibold
-p1b.TextSize = 16
-p1b.AutoButtonColor = false
-p1b.Parent = p1f
+local s1 = Instance.new("Frame")
+s1.Size = UDim2.new(1, 0, 0, 55)
+s1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+s1.BorderSizePixel = 0
+s1.Parent = pc
 
-p1b.MouseButton1Click:Connect(function()
-	if pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-		s4 = pl.Character.HumanoidRootPart.CFrame
-		p1f.BackgroundColor3 = Color3.fromRGB(50,150,100)
-		p1b.TextColor3 = Color3.fromRGB(255,255,255)
-		pit.Text = "Position saved! You will respawn here."
-		task.wait(0.5)
-		p1f.BackgroundColor3 = Color3.fromRGB(25,25,35)
-		p1b.TextColor3 = Color3.fromRGB(200,200,210)
-		f10()
-	end
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = s1 end
+
+local s2 = Instance.new("TextButton")
+s2.Size = UDim2.new(1, 0, 1, 0)
+s2.BackgroundTransparency = 1
+s2.Text = "Save Current Position"
+s2.TextColor3 = Color3.fromRGB(200, 200, 210)
+s2.Font = Enum.Font.GothamSemibold
+s2.TextSize = 16
+s2.AutoButtonColor = false
+s2.Parent = s1
+
+s2.MouseButton1Click:Connect(function()
+    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+        sv = p.Character.HumanoidRootPart.CFrame
+        s1.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+        s2.TextColor3 = Color3.fromRGB(255, 255, 255)
+        pt.Text = "Position saved! You will respawn here and be pulled back if you go too far."
+        task.wait(0.5)
+        s1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+        s2.TextColor3 = Color3.fromRGB(200, 200, 210)
+        soc()
+    end
 end)
 
-p1b.MouseEnter:Connect(function()
-	t:Create(p1f,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(35,35,45)}):Play()
+s2.MouseEnter:Connect(function()
+    tw:Create(s1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
 end)
 
-p1b.MouseLeave:Connect(function()
-	t:Create(p1f,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(25,25,35)}):Play()
+s2.MouseLeave:Connect(function()
+    tw:Create(s1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
 end)
 
-local p2f = Instance.new("Frame")
-p2f.Size = UDim2.new(1,0,0,55)
-p2f.BackgroundColor3 = Color3.fromRGB(25,25,35)
-p2f.BorderSizePixel = 0
-p2f.Parent = pc
-Instance.new("UICorner",p2f).CornerRadius = UDim.new(0,10)
+local c1 = Instance.new("Frame")
+c1.Size = UDim2.new(1, 0, 0, 55)
+c1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+c1.BorderSizePixel = 0
+c1.Parent = pc
 
-local p2b = Instance.new("TextButton")
-p2b.Size = UDim2.new(1,0,1,0)
-p2b.BackgroundTransparency = 1
-p2b.Text = "Clear Saved Position"
-p2b.TextColor3 = Color3.fromRGB(200,200,210)
-p2b.Font = Enum.Font.GothamSemibold
-p2b.TextSize = 16
-p2b.AutoButtonColor = false
-p2b.Parent = p2f
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = c1 end
 
-p2b.MouseButton1Click:Connect(function()
-	s4 = nil
-	p2f.BackgroundColor3 = Color3.fromRGB(150,50,50)
-	p2b.TextColor3 = Color3.fromRGB(255,255,255)
-	pit.Text = "Position cleared!"
-	task.wait(0.5)
-	p2f.BackgroundColor3 = Color3.fromRGB(25,25,35)
-	p2b.TextColor3 = Color3.fromRGB(200,200,210)
-	pit.Text = "No position saved"
-	f10()
+local c2 = Instance.new("TextButton")
+c2.Size = UDim2.new(1, 0, 1, 0)
+c2.BackgroundTransparency = 1
+c2.Text = "Clear Saved Position"
+c2.TextColor3 = Color3.fromRGB(200, 200, 210)
+c2.Font = Enum.Font.GothamSemibold
+c2.TextSize = 16
+c2.AutoButtonColor = false
+c2.Parent = c1
+
+c2.MouseButton1Click:Connect(function()
+    sv = nil
+    c1.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+    c2.TextColor3 = Color3.fromRGB(255, 255, 255)
+    pt.Text = "Position cleared!"
+    task.wait(0.5)
+    c1.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    c2.TextColor3 = Color3.fromRGB(200, 200, 210)
+    pt.Text = "No position saved"
+    soc()
 end)
 
-p2b.MouseEnter:Connect(function()
-	t:Create(p2f,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(35,35,45)}):Play()
+c2.MouseEnter:Connect(function()
+    tw:Create(c1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
 end)
 
-p2b.MouseLeave:Connect(function()
-	t:Create(p2f,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(25,25,35)}):Play()
+c2.MouseLeave:Connect(function()
+    tw:Create(c1, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
 end)
 
 local cc = tcs["Configs"]
 
 local kf = Instance.new("Frame")
-kf.Size = UDim2.new(1,0,0,90)
-kf.BackgroundColor3 = Color3.fromRGB(25,25,35)
+kf.Size = UDim2.new(1, 0, 0, 90)
+kf.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 kf.BorderSizePixel = 0
 kf.Parent = cc
-Instance.new("UICorner",kf).CornerRadius = UDim.new(0,10)
+
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 10) w.Parent = kf end
 
 local kl = Instance.new("TextLabel")
-kl.Size = UDim2.new(1,-20,0,35)
-kl.Position = UDim2.new(0,10,0,10)
+kl.Size = UDim2.new(1, -20, 0, 35)
+kl.Position = UDim2.new(0, 10, 0, 10)
 kl.BackgroundTransparency = 1
 kl.Text = "Toggle Keybind"
-kl.TextColor3 = Color3.fromRGB(200,200,210)
+kl.TextColor3 = Color3.fromRGB(200, 200, 210)
 kl.Font = Enum.Font.GothamSemibold
 kl.TextSize = 16
 kl.TextXAlignment = Enum.TextXAlignment.Left
 kl.Parent = kf
 
 local kb = Instance.new("TextButton")
-kb.Size = UDim2.new(0,100,0,40)
-kb.Position = UDim2.new(0,10,0,45)
-kb.BackgroundColor3 = Color3.fromRGB(35,35,45)
+kb.Size = UDim2.new(0, 100, 0, 40)
+kb.Position = UDim2.new(0, 10, 0, 45)
+kb.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 kb.BorderSizePixel = 0
 kb.Text = "G"
-kb.TextColor3 = Color3.fromRGB(100,200,255)
+kb.TextColor3 = Color3.fromRGB(100, 200, 255)
 kb.Font = Enum.Font.GothamBold
 kb.TextSize = 18
 kb.AutoButtonColor = false
 kb.Parent = kf
-Instance.new("UICorner",kb).CornerRadius = UDim.new(0,8)
+
+do local w = Instance.new("UICorner") w.CornerRadius = UDim.new(0, 8) w.Parent = kb end
+
+local wk = false
 
 kb.MouseButton1Click:Connect(function()
-	if s8 then return end
-	s8 = true
-	kb.Text = "..."
-	local cn
-	cn = u.InputBegan:Connect(function(inp, gp)
-		if gp then return end
-		if inp.UserInputType == Enum.UserInputType.Keyboard then
-			c.Keybind = inp.KeyCode
-			kb.Text = inp.KeyCode.Name
-			f10()
-			s8 = false
-			cn:Disconnect()
-		end
-	end)
+    if wk then return end
+    wk = true
+    kb.Text = "..."
+    local w
+    w = ui.InputBegan:Connect(function(w1, gp)
+        if gp then return end
+        if w1.UserInputType == Enum.UserInputType.Keyboard then
+            cfg.Keybind = w1.KeyCode
+            kb.Text = w1.KeyCode.Name
+            soc()
+            wk = false
+            w:Disconnect()
+        end
+    end)
 end)
 
 kb.MouseEnter:Connect(function()
-	t:Create(kb,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(45,45,55)}):Play()
+    tw:Create(kb, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 55)}):Play()
 end)
 
 kb.MouseLeave:Connect(function()
-	t:Create(kb,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(35,35,45)}):Play()
+    tw:Create(kb, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
 end)
 
-local function f13()
-	if kb and c.Keybind then kb.Text = c.Keybind.Name end
-	if c.AutoWeightActive then
-		s7 = true
-		wt.sd(true)
-	end
-	if c.SelectedTraining then
-		s1 = c.SelectedTraining
-		for cat,tg in pairs(ft) do
-			if cat == s1 then
-				tg.sd(true)
-				local pw = f2(cat)
-				local an = f3(cat, pw)
-				if an then
-					local ao = f4(cat, an)
-					s2 = ao
-					if ao then
-						local ok,cf2 = f5(ao)
-						if ok then
-							s3 = cf2
-							it.Text = w4[cat].." — Area: "..an.." (req "..w[cat][an].req..")"
-						end
-					end
-				end
-			end
-		end
-		if not c.TrainingEnabled then it.Text = "No active training" end
-	end
-	if s4 then
-		pit.Text = "Position loaded from config!"
-	end
+local function alc()
+    if kb and cfg.Keybind then
+        kb.Text = cfg.Keybind.Name
+    end
+    if cfg.AutoWeightActive ~= nil then
+        aw = cfg.AutoWeightActive
+        uwb()
+    end
+    if cfg.SelectedTraining then
+        st = cfg.SelectedTraining
+        for w, w2 in pairs(fb) do
+            if w == st then
+                w2.f.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+                w2.b.TextColor3 = Color3.fromRGB(255, 255, 255)
+                local w3 = gcs(w)
+                local w4 = fba(w, w3)
+                if w4 then
+                    local w5 = gao(w, w4)
+                    ao = w5
+                    if w5 then
+                        local w6, w7 = tta(w5)
+                        if w6 then
+                            ac = w7
+                            it.Text = dp[w] .. " \226\128\148 Area: " .. w4 .. " (req " .. ar[w][w4].req .. ")"
+                        end
+                    end
+                end
+            else
+                w2.f.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+                w2.b.TextColor3 = Color3.fromRGB(200, 200, 210)
+            end
+        end
+        if not cfg.TrainingEnabled then
+            it.Text = "No active training"
+        end
+    end
+    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and sv then
+        task.wait(0.5)
+        p.Character.HumanoidRootPart.CFrame = sv
+    end
 end
 
-local ld = f9()
+local ld = lc()
 if ld then
-	task.wait(0.1)
-	f13()
+    task.wait(0.1)
+    alc()
 end
 
-local function f11()
-	if s6 then return end
-	s6 = true
-	s5 = not s5
-	if s5 then
-		g2.Size = UDim2.new(0,0,0,0)
-		g2.Visible = true
-		t:Create(g2,TweenInfo.new(0.3,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-			{Size=UDim2.new(0,600,0,480)}):Play()
-		task.wait(0.3)
-		s6 = false
-	else
-		t:Create(g2,TweenInfo.new(0.2,Enum.EasingStyle.Back,Enum.EasingDirection.In),
-			{Size=UDim2.new(0,0,0,0)}):Play()
-		task.wait(0.2)
-		g2.Visible = false
-		s6 = false
-	end
+local vo = false
+local ut = false
+
+local function tu()
+    if ut then return end
+    ut = true
+    vo = not vo
+    if vo then
+        mf.Size = UDim2.new(0, 0, 0, 0)
+        mf.Visible = true
+        tw:Create(mf, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Size = UDim2.new(0, 600, 0, 480)}):Play()
+        task.wait(0.3)
+        ut = false
+    else
+        tw:Create(mf, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+            {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        task.wait(0.2)
+        mf.Visible = false
+        ut = false
+    end
 end
 
-g1.MouseButton1Click:Connect(function() if not s6 then f11() end end)
-
-g3.MouseButton1Click:Connect(function() if not s6 and s5 then f11() end end)
-
-g1.MouseEnter:Connect(function()
-	if not s6 then
-		t:Create(g1,TweenInfo.new(0.2),{Size=UDim2.new(0,90,0,90)}):Play()
-		t:Create(gl,TweenInfo.new(0.2),{TextSize=22}):Play()
-	end
+tgb.MouseButton1Click:Connect(function()
+    if not ut then tu() end
 end)
 
-g1.MouseLeave:Connect(function()
-	if not s6 then
-		t:Create(g1,TweenInfo.new(0.2),{Size=UDim2.new(0,80,0,80)}):Play()
-		t:Create(gl,TweenInfo.new(0.2),{TextSize=20}):Play()
-	end
+cb.MouseButton1Click:Connect(function()
+    if not ut and vo then tu() end
 end)
 
-g3.MouseEnter:Connect(function()
-	t:Create(g3,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(255,50,50)}):Play()
+tgb.MouseEnter:Connect(function()
+    if not ut then
+        tw:Create(tgb, TweenInfo.new(0.2), {Size = UDim2.new(0, 90, 0, 90)}):Play()
+        tw:Create(tgl, TweenInfo.new(0.2), {TextSize = 22}):Play()
+    end
 end)
 
-g3.MouseLeave:Connect(function()
-	t:Create(g3,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(35,35,45)}):Play()
+tgb.MouseLeave:Connect(function()
+    if not ut then
+        tw:Create(tgb, TweenInfo.new(0.2), {Size = UDim2.new(0, 80, 0, 80)}):Play()
+        tw:Create(tgl, TweenInfo.new(0.2), {TextSize = 20}):Play()
+    end
 end)
 
-u.InputBegan:Connect(function(inp, gp)
-	if gp then return end
-	if inp.KeyCode == c.Keybind and not s6 then f11() end
+ui.InputBegan:Connect(function(w, gp)
+    if gp then return end
+    if w.KeyCode == cfg.Keybind and not ut then tu() end
 end)
 
-r.Heartbeat:Connect(function()
-	if s4 and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-		local hr = pl.Character.HumanoidRootPart
-		if (hr.Position - s4.Position).Magnitude > 20 then hr.CFrame = s4 end
-	end
-	if not s1 then return end
-	local ch = pl.Character
-	if not ch then return end
-	local hr = ch:FindFirstChild("HumanoidRootPart")
-	if not hr then return end
-	local pw = f2(s1)
-	local bn = f3(s1, pw)
-	if bn and (not s2 or s2.Name ~= bn) then
-		local ao = f4(s1, bn)
-		if ao then
-			s2 = ao
-			local ok,cf2 = f5(ao)
-			if ok then
-				s3 = cf2
-				it.Text = w4[s1].." — Area: "..bn.." (req "..w[s1][bn].req..")"
-			end
-		end
-	end
-	if s3 then
-		if (hr.Position - s3.Position).Magnitude > md then hr.CFrame = s3 end
-	end
-	if s1 == "FistStrength" then
-		if pw <= f1("10T") then rs:FireServer({{"Add_FS_Request"}}) end
-	end
+rs.Heartbeat:Connect(function()
+    if sv and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+        local w = p.Character.HumanoidRootPart
+        if (w.Position - sv.Position).Magnitude > 20 then
+            w.CFrame = sv
+        end
+    end
+    if not st then return end
+    local w = p.Character
+    if not w then return end
+    local w1 = w:FindFirstChild("HumanoidRootPart")
+    if not w1 then return end
+    local w2 = gcs(st)
+    local w3 = fba(st, w2)
+    if w3 and (not ao or ao.Name ~= w3) then
+        local w4 = gao(st, w3)
+        if w4 then
+            ao = w4
+            local w5, w6 = tta(w4)
+            if w5 then
+                ac = w6
+                it.Text = dp[st] .. " \226\128\148 Area: " .. w3 .. " (req " .. ar[st][w3].req .. ")"
+            end
+        end
+    end
+    if ac then
+        if (w1.Position - ac.Position).Magnitude > md then
+            w1.CFrame = ac
+        end
+    end
+    if st == "FistStrength" then
+        if w2 <= ctn("10T") then
+            re:FireServer(unpack({{"Add_FS_Request"}}))
+        end
+    end
 end)
 
-pl.CharacterAdded:Connect(function(ch)
-	task.wait(1)
-	local hr = ch:WaitForChild("HumanoidRootPart", 5)
-	if s4 then task.wait(0.2) hr.CFrame = s4 end
-	if s7 then task.wait(0.33) f6() f12() end
-	if s1 and s2 then
-		local ok,cf2 = f5(s2)
-		if ok then s3 = cf2 end
-	end
+p.CharacterAdded:Connect(function(w)
+    task.wait(1)
+    local w1 = w:WaitForChild("HumanoidRootPart", 5)
+    if sv then
+        task.wait(0.2)
+        w1.CFrame = sv
+    end
+    if aw then
+        task.wait(0.33)
+        ebw()
+        swf()
+    end
+    if st and ao then
+        local w2, w3 = tta(ao)
+        if w2 then ac = w3 end
+    end
 end)
 
-if pl.Character then
-	task.wait(1)
-	if s4 and pl.Character:FindFirstChild("HumanoidRootPart") then
-		pl.Character.HumanoidRootPart.CFrame = s4
-	end
+if p.Character then
+    task.wait(1)
+    if sv and p.Character:FindFirstChild("HumanoidRootPart") then
+        p.Character.HumanoidRootPart.CFrame = sv
+    end
 end
 
 if queue_on_teleport then
-	queue_on_teleport([[
-		wait(2)
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/halocookiebob-sudo/SPTS/refs/heads/main/SptsEndless", true))()
-
-		wait(1)
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/6942x/UniversalUtility/refs/heads/main/Init.lua", true))()
-	]])
+    queue_on_teleport([[
+        wait(2)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/halocookiebob-sudo/SPTS/refs/heads/main/SptsEndless", true))()
+        wait(1)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/6942x/UniversalUtility/refs/heads/main/Init.lua", true))()
+    ]])
 end
